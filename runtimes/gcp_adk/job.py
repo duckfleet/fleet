@@ -60,6 +60,15 @@ async def _main() -> None:
                            "(preferred), or the DUCKFLEET_GMAIL_* fallback")
         print(json.dumps({"event": "brief_not_emailed", "missing_config": missing}))
 
+    # Operator digest: who newly signed up in the last day (product CRM data, read from the
+    # duckfleet_interest lead list). Sends ONLY on a non-quiet day, to DUCKFLEET_ADMIN_EMAIL
+    # (falls back to NOTIFY_EMAIL). Best-effort: never blocks or fails the fleet run.
+    try:
+        from agents.admin_digest import run_admin_digest
+        print(json.dumps(run_admin_digest(), default=str))
+    except Exception as e:  # noqa: BLE001
+        print(json.dumps({"event": "admin_digest_error", "error": str(e)}))
+
 
 def main() -> None:
     asyncio.run(_main())

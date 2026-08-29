@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # Where the morning brief is emailed (hackathon: one recipient in config;
     # later: per-user from the profile UI). Set DUCKFLEET_NOTIFY_EMAIL in .env.
     notify_email: str = ""
+    # Operator address for the daily "who signed up" digest (agents/admin_digest). Blank
+    # falls back to notify_email. Set DUCKFLEET_ADMIN_EMAIL to send the digest elsewhere.
+    admin_email: str = ""
 
     # Resend (transactional ESP) — the PREFERRED sender: an own-domain, authenticated path
     # that actually reaches the inbox (a consumer @gmail.com sender lands in spam). The API
