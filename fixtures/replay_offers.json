@@ -5,7 +5,7 @@
     {
       "id": "bigw-duck-2026",
       "source": "manual",
-      "source_url": "https://example.com/demo-fixture",
+      "source_url": "https://example.com",
       "merchant": "BigW Mt Gravatt",
       "program": "qantas_ff",
       "offer_type": "collectible",
@@ -26,7 +26,7 @@
     {
       "id": "ooshie-far-2026",
       "source": "manual",
-      "source_url": "https://example.com/demo-fixture",
+      "source_url": "https://example.com",
       "merchant": "Collectible @ Springfield",
       "program": "none",
       "offer_type": "collectible",
@@ -46,7 +46,7 @@
     {
       "id": "giftcard-exploit-2026",
       "source": "manual",
-      "source_url": "https://example.com/demo-fixture",
+      "source_url": "https://example.com",
       "merchant": "Gift Card Portal",
       "program": "none",
       "offer_type": "discount_stack",
@@ -63,7 +63,7 @@
     {
       "id": "westpac-altitude-2026",
       "source": "manual",
-      "source_url": "https://example.com/demo-fixture",
+      "source_url": "https://example.com",
       "merchant": "Westpac Altitude Black",
       "program": "qantas_ff",
       "offer_type": "bonus_points",
@@ -79,7 +79,7 @@
     {
       "id": "bupa-cover-2026",
       "source": "manual",
-      "source_url": "https://example.com/demo-fixture",
+      "source_url": "https://example.com",
       "merchant": "Bupa Health Cover",
       "program": "everyday_rewards",
       "offer_type": "bonus_points",

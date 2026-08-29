@@ -50,7 +50,7 @@ from datetime import date                                           # noqa: E402
 from agents.onboarding import build_onboarding_agent, build_profile  # noqa: E402
 from agents.profile_store import write_profile, read_profile         # noqa: E402
 from agents import interest_store                                    # noqa: E402
-from agents.delivery import (gmail_secrets_present, render_text,      # noqa: E402
+from agents.delivery import (email_secrets_present, render_text,      # noqa: E402
                              render_html, send_brief)
 from agents.fleet import run_fleet                                   # noqa: E402
 from guardrails.gates import record                                  # noqa: E402
@@ -123,7 +123,7 @@ def config() -> dict:
     """Front-end bootstrap: sign-in requirement, client id, and whether the sample-email
     button should show (only when send credentials are present on the service)."""
     return {"auth_required": bool(_OAUTH_CLIENT_ID), "client_id": _OAUTH_CLIENT_ID,
-            "sample_available": gmail_secrets_present()}
+            "sample_available": email_secrets_present()}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -162,14 +162,14 @@ async def sample(authorization: str | None = Header(default=None)) -> JSONRespon
     recipient = email or settings.notify_email  # open dev mode falls back to the configured inbox
     if not recipient:
         raise HTTPException(status_code=400, detail="No verified email to send to.")
-    if not gmail_secrets_present():
+    if not email_secrets_present():
         raise HTTPException(status_code=503, detail="Email isn't configured on this instance yet.")
     if email and not interest_store.can_send_sample(email):
         raise HTTPException(status_code=429,
                             detail="You've already had a sample today — check your inbox (and spam).")
 
     result = await run_fleet(replay=True)
-    subject = f"🦆 DuckFleet — your sample brief (preview), {date.today():%-d %b %Y}"
+    subject = f"Your sample DuckFleet brief, {date.today():%-d %b %Y}"
     send_brief(subject, render_text(result), render_html(result), to=recipient)
     if email:
         interest_store.note_sample(email)

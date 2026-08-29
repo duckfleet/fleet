@@ -20,18 +20,44 @@ from config.settings import settings
 
 _TOKEN_URI = "https://oauth2.googleapis.com/token"
 _SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
+_RESEND_URL = "https://api.resend.com/emails"
+
+
+def resend_configured() -> bool:
+    """True when a Resend API key + From address are set — the preferred sender."""
+    return bool(settings.resend_api_key and settings.resend_from)
 
 
 def gmail_secrets_present() -> bool:
-    """True when the send credentials exist (recipient not required — the caller may
+    """True when the Gmail send credentials exist (recipient not required — the caller may
     pass an explicit `to`, e.g. a user's verified email for an on-demand sample)."""
     return bool(settings.gmail_client_id and settings.gmail_client_secret
                 and settings.gmail_refresh_token)
 
 
 def gmail_configured() -> bool:
-    """True only when every secret + the default recipient is present."""
+    """True only when every Gmail secret + the default recipient is present."""
     return bool(gmail_secrets_present() and settings.notify_email)
+
+
+def email_secrets_present() -> bool:
+    """True when SOME sender is usable (Resend preferred, else Gmail). Recipient not
+    required — the caller may pass an explicit `to`."""
+    return resend_configured() or gmail_secrets_present()
+
+
+def email_configured() -> bool:
+    """True only when a sender AND the default nightly recipient are present."""
+    return email_secrets_present() and bool(settings.notify_email)
+
+
+def active_email_provider() -> str | None:
+    """Which sender send_brief() will use right now: 'resend', 'gmail', or None."""
+    if resend_configured():
+        return "resend"
+    if gmail_secrets_present():
+        return "gmail"
+    return None
 
 
 _DIV = "═" * 32   # heavy divider
@@ -53,9 +79,9 @@ def render_text(result: dict) -> str:
     n_do = sum(1 for a in items if a.verdict in ("do_it", "needs_approval"))
     n_skip = sum(1 for a in items if a.verdict == "skip")
 
-    L: list[str] = [f"\U0001F986 DuckFleet — Daily Hunt · {date.today():%-d %b %Y}"]
-    L.append("⚙️  SIMULATION MODE — replay fixtures (not live deals)"
-             if mode == "replay" else "\U0001F4E1 LIVE run — OzBargain feed")
+    L: list[str] = [f"DuckFleet Daily Hunt · {date.today():%-d %b %Y}"]
+    L.append("SIMULATION MODE: replay fixtures (not live deals)"
+             if mode == "replay" else "LIVE run: OzBargain feed")
     L.append(f"Reviewed {result.get('n_candidates', len(items))}  ·  "
              f"{n_do} to do  ·  {n_skip} skipped  ·  {excluded} excluded (ToS)")
     L.append("")
@@ -63,47 +89,47 @@ def render_text(result: dict) -> str:
     top = next((a for a in items if a.verdict in ("do_it", "needs_approval")), None)
     if top:
         cpp = f"  ·  {top.cents_per_point}c/pt" if top.cents_per_point is not None else ""
-        L += [_DIV, "⭐ TOP PICK", top.headline,
+        L += [_DIV, "TOP PICK", top.headline,
               f"   {_big_value_text(top, by_ref)}   →  {_verdict_label(top.verdict)}",
               f"   {top.reasoning}", *_links_text(top, by_ref), _DIV, ""]
 
     others = [a for a in items if a.verdict in ("do_it", "needs_approval") and a is not top]
     if others:
-        L.append("✅ ALSO WORTH DOING")
+        L.append("ALSO WORTH DOING")
         for a in others:
             cpp = f"  ·  {a.cents_per_point}c/pt" if a.cents_per_point is not None else ""
-            L += [f"  • {a.headline} — ${a.net_value_aud:,.2f}{cpp}", f"    {a.reasoning}",
+            L += [f"  • {a.headline} · ${a.net_value_aud:,.2f}{cpp}", f"    {a.reasoning}",
                   *_links_text(a, by_ref)]
         L.append("")
 
     skips = [a for a in items if a.verdict == "skip"]
     if skips:
-        L.append("⛔ SKIPPED (saved you the trip)")
+        L.append("SKIPPED (saved you the trip)")
         for a in skips:
             L += [f"  • {a.headline}", f"    {a.reasoning}"]
         L.append("")
 
     if excluded:
-        L += [f"\U0001F6AB EXCLUDED — {excluded} offer(s) blocked for ToS risk before review", ""]
+        L += [f"EXCLUDED: {excluded} offer(s) blocked for ToS risk before review", ""]
 
     calls = result.get("call_candidates", [])
     if calls:
-        L.append("\U0001F4DE STOCK CHECK — reply APPROVE and the fleet will call to verify before you go:")
+        L.append("STOCK CHECK: reply APPROVE and the fleet will call to verify before you go:")
         for c in calls:
-            L.append(f"  • {c['merchant']} — {c['item']} (gated call: it self-identifies as AI)")
+            L.append(f"  • {c['merchant']}: {c['item']} (gated call: it self-identifies as AI)")
         L.append("")
 
     econ = result.get("economics")
     if econ:
         c, v, roi = econ.get("cost_aud", 0), econ.get("value_aud", 0), econ.get("roi")
         if econ.get("verdict") == "quiet_night":
-            L += [f"\U0001F9EE Run economics: ~${c:.3f} compute · nothing cleared the bar — "
+            L += [f"Run economics: ~${c:.3f} compute · nothing cleared the bar, "
                   f"a quiet, cheap night (the fleet won't burn credit for nothing).", ""]
         else:
             roi_s = f"  (≈{roi:,.0f}× return)" if roi else ""
             worth = "worth running" if econ.get("verdict") == "worth_it" else "NOT worth the compute"
-            L += [f"\U0001F9EE Run economics: ~${c:.3f} compute → ${v:,.2f} of value surfaced"
-                  f"{roi_s} — {worth}.", ""]
+            L += [f"Run economics: ~${c:.3f} compute → ${v:,.2f} of value surfaced"
+                  f"{roi_s}. {worth}.", ""]
 
     hist = result.get("history_rows", 0)
     L += [_SUB, "What's real vs simulated (build period):",
@@ -112,7 +138,7 @@ def render_text(result: dict) -> str:
           f"  • Drive time/fuel: {'frozen fixture values' if mode == 'replay' else 'estimated from a local store directory'}",
           "  • Phone stock-check: gated; a real call on your approval (Twilio), else labelled-simulated",
           f"  • History → BigQuery: {f'yes ({hist} rows)' if hist else 'off'}",
-          "", "Reply STOP to pause the fleet."]
+          "", "You're receiving this because you set up DuckFleet."]
     return "\n".join(L)
 
 
@@ -169,7 +195,7 @@ def _links_html(item, by_ref: dict) -> str:
     base = "text-decoration:none;font-weight:600;font-size:15px;padding-bottom:1px;border-bottom:2px solid"
     out = []
     if url:
-        out.append(f'<a href="{_esc(url)}" style="{base} #2b6cff55;color:#2b6cff">Activate ↗</a>')
+        out.append(f'<a href="{_esc(url)}" style="{base} #2b6cff55;color:#2b6cff">Activate</a>')
     ml = "margin-left:24px" if out else ""
     out.append(f'<a href="{_esc(_calendar_url(item.headline))}" style="{base} #e6e1d5;color:#6a675e;{ml}">'
                f'Add a reminder</a>')
@@ -180,8 +206,8 @@ def _links_text(item, by_ref: dict) -> list[str]:
     url = (by_ref.get(item.audit_ref) or {}).get("source_url")
     lines = []
     if url:
-        lines.append(f"   ↗ Activate/view: {url}")
-    lines.append(f"   📅 Add reminder: {_calendar_url(item.headline)}")
+        lines.append(f"   Activate/view: {url}")
+    lines.append(f"   Add reminder: {_calendar_url(item.headline)}")
     return lines
 
 
@@ -228,7 +254,7 @@ def render_html(result: dict) -> str:
     # masthead (table for reliable left/right in email)
     P.append(
         '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:38px"><tr>'
-        '<td style="font-weight:700;font-size:19px">🦆 DuckFleet</td>'
+        '<td style="font-weight:700;font-size:19px">DuckFleet</td>'
         f'<td align="right" style="color:{SOFT};font-size:12px;font-weight:600;letter-spacing:.4px">'
         f'{date.today():%-d %b} · {banner}</td></tr></table>')
 
@@ -282,17 +308,49 @@ def render_html(result: dict) -> str:
     cost = ""
     if econ:
         c = econ.get("cost_aud", 0)
-        cost = (f"A quiet night — cost ${c:.3f} to run."
+        cost = (f"A quiet night, cost ${c:.3f} to run."
                 if econ.get("verdict") == "quiet_night" else f"Cost ${c:.3f} to run.")
     P.append(
         f'<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:40px;'
         f'border-top:1px solid {RULE}"><tr>'
         f'<td style="padding-top:14px;color:{SOFT};font-size:13px;font-weight:500">{cost}</td>'
         f'<td align="right" style="padding-top:14px;color:{SOFT};font-size:13px;font-weight:500">'
-        f'Reply STOP to pause the fleet.</td></tr></table>')
+        f'You set up DuckFleet, so it sends you this brief.</td></tr></table>')
 
     P.append('</div></div>')
     return "".join(P)
+
+
+def _list_unsub_headers() -> dict:
+    """RFC 2369 / 8058 unsubscribe headers. A real unsubscribe path is required for bulk
+    inbox placement (Gmail/Yahoo) and beats 'reply STOP'. An https value also gets the
+    one-click POST header; a mailto value gets the plain header only."""
+    v = settings.list_unsubscribe.strip()
+    if not v:
+        return {}
+    h = {"List-Unsubscribe": f"<{v}>"}
+    if v.lower().startswith("https://"):
+        h["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+    return h
+
+
+def _send_via_resend(subject: str, body_text: str, body_html: str | None,
+                     recipient: str) -> dict:
+    """Send through Resend's REST API (kept on httpx to avoid a new dep — no SDK needed).
+    Sends both text and html so HTML-blocking clients fall back."""
+    payload: dict = {"from": settings.resend_from, "to": [recipient],
+                     "subject": subject, "text": body_text}
+    if body_html:
+        payload["html"] = body_html
+    headers = _list_unsub_headers()
+    if headers:
+        payload["headers"] = headers
+    resp = httpx.post(_RESEND_URL, timeout=20.0, json=payload, headers={
+        "Authorization": f"Bearer {settings.resend_api_key}",
+        "Content-Type": "application/json",
+    })
+    resp.raise_for_status()
+    return resp.json()
 
 
 def _access_token() -> str:
@@ -307,19 +365,16 @@ def _access_token() -> str:
     return creds.token
 
 
-def send_brief(subject: str, body_text: str, body_html: str | None = None,
-               to: str | None = None) -> dict:
-    """Send the brief as the configured sender. Recipient defaults to settings.notify_email
-    (the nightly job); pass `to` to send to a specific address (e.g. a user's VERIFIED
-    sign-in email for an on-demand sample). Sends multipart/alternative (plain text +
-    optional HTML) so clients that block HTML fall back. Raises if send creds are missing."""
-    recipient = to or settings.notify_email
-    if not gmail_secrets_present() or not recipient:
-        raise RuntimeError("Gmail not configured (set DUCKFLEET_GMAIL_* and a recipient).")
+def _send_via_gmail(subject: str, body_text: str, body_html: str | None,
+                    recipient: str) -> dict:
+    """Send through the Gmail API as settings.gmail_sender. Fallback path only — a consumer
+    @gmail.com sender has poor deliverability; prefer Resend on a verified domain."""
     msg = EmailMessage()
     msg["To"] = recipient
     msg["From"] = settings.gmail_sender or "me"
     msg["Subject"] = subject
+    for k, val in _list_unsub_headers().items():
+        msg[k] = val
     msg.set_content(body_text)                      # plain-text fallback (always present)
     if body_html:
         msg.add_alternative(body_html, subtype="html")
@@ -328,3 +383,22 @@ def send_brief(subject: str, body_text: str, body_html: str | None = None,
                       json={"raw": raw}, timeout=20.0)
     resp.raise_for_status()
     return resp.json()
+
+
+def send_brief(subject: str, body_text: str, body_html: str | None = None,
+               to: str | None = None) -> dict:
+    """Send the brief. Uses Resend when configured (preferred, own-domain deliverability),
+    else falls back to Gmail. Recipient defaults to settings.notify_email (the nightly job);
+    pass `to` to send to a specific address (e.g. a user's VERIFIED sign-in email for an
+    on-demand sample). Sends plain text + optional HTML so clients that block HTML fall back.
+    Raises if no sender is configured or there is no recipient."""
+    recipient = to or settings.notify_email
+    if not recipient:
+        raise RuntimeError("No recipient (pass `to` or set DUCKFLEET_NOTIFY_EMAIL).")
+    if resend_configured():
+        return _send_via_resend(subject, body_text, body_html, recipient)
+    if gmail_secrets_present():
+        return _send_via_gmail(subject, body_text, body_html, recipient)
+    raise RuntimeError(
+        "No email sender configured (set DUCKFLEET_RESEND_API_KEY + DUCKFLEET_RESEND_FROM, "
+        "or the DUCKFLEET_GMAIL_* fallback).")

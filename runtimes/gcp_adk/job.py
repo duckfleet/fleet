@@ -26,7 +26,8 @@ if _envf.exists():
             os.environ.setdefault(_k.strip(), _v.strip())
 
 from agents.fleet import run_fleet                                      # noqa: E402
-from agents.delivery import gmail_configured, send_brief, render_text, render_html  # noqa: E402
+from agents.delivery import (email_configured, email_secrets_present,   # noqa: E402
+                             active_email_provider, send_brief, render_text, render_html)
 from config.settings import settings                                    # noqa: E402
 
 
@@ -44,18 +45,19 @@ async def _main() -> None:
         "brief": brief,
     }, default=str))
 
-    # Deliver via Gmail if configured; otherwise say exactly what's missing (never silent).
-    if gmail_configured():
-        subject = f"🦆 DuckFleet — Daily Hunt, {date.today():%-d %b %Y}"
+    # Deliver via Resend (preferred) or Gmail if configured; else say exactly what's missing.
+    if email_configured():
+        subject = f"Your DuckFleet brief for {date.today():%-d %b %Y}"
         send_brief(subject, render_text(result), render_html(result))
-        print(json.dumps({"event": "brief_emailed", "to": settings.notify_email}))
+        print(json.dumps({"event": "brief_emailed", "to": settings.notify_email,
+                          "provider": active_email_provider()}))
     else:
-        missing = [name for name, val in [
-            ("DUCKFLEET_NOTIFY_EMAIL", settings.notify_email),
-            ("DUCKFLEET_GMAIL_CLIENT_ID", settings.gmail_client_id),
-            ("DUCKFLEET_GMAIL_CLIENT_SECRET", settings.gmail_client_secret),
-            ("DUCKFLEET_GMAIL_REFRESH_TOKEN", settings.gmail_refresh_token),
-        ] if not val]
+        missing = []
+        if not settings.notify_email:
+            missing.append("DUCKFLEET_NOTIFY_EMAIL")
+        if not email_secrets_present():
+            missing.append("a sender: DUCKFLEET_RESEND_API_KEY + DUCKFLEET_RESEND_FROM "
+                           "(preferred), or the DUCKFLEET_GMAIL_* fallback")
         print(json.dumps({"event": "brief_not_emailed", "missing_config": missing}))
 
 

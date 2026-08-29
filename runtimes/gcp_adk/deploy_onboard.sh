@@ -30,13 +30,17 @@ if [ -z "$OAUTH_CLIENT_ID" ]; then
   sleep 3
 fi
 
-# Gmail sender for the on-demand "sample brief" email (sent only to a user's verified
-# address). The 3 secrets come from Secret Manager (same as the nightly job); the sender
-# is non-secret. Blank sender is fine (Gmail defaults to "me"). No secrets => the sample
-# button simply hides.
+# Sender config for the on-demand "sample brief" email (sent only to a user's verified
+# address). Preferred: Resend (duckfleet-resend-api-key secret + DUCKFLEET_RESEND_FROM).
+# Fallback: Gmail (3 secrets, same as the nightly job). All non-secret bits read from .env;
+# no sender configured => the sample button simply hides.
 SENDER=""
+RESEND_FROM=""
+LIST_UNSUB=""
 if [ -f .env ]; then
   SENDER=$(grep -E '^DUCKFLEET_GMAIL_SENDER=' .env | head -1 | cut -d= -f2- || true)
+  RESEND_FROM=$(grep -E '^DUCKFLEET_RESEND_FROM=' .env | head -1 | cut -d= -f2- || true)
+  LIST_UNSUB=$(grep -E '^DUCKFLEET_LIST_UNSUBSCRIBE=' .env | head -1 | cut -d= -f2- || true)
 fi
 
 SA=$(gcloud iam service-accounts list --project "$PROJECT" \
@@ -59,8 +63,8 @@ for role in roles/aiplatform.user roles/cloudbuild.builds.builder roles/datastor
   gcloud projects add-iam-policy-binding "$PROJECT" \
     --member="serviceAccount:$SA" --role="$role" --condition=None -q >/dev/null
 done
-echo "== IAM: Gmail secret access (for the sample-brief email) =="
-for s in duckfleet-gmail-client-id duckfleet-gmail-client-secret duckfleet-gmail-refresh-token; do
+echo "== IAM: email secret access (for the sample-brief email) =="
+for s in duckfleet-resend-api-key duckfleet-gmail-client-id duckfleet-gmail-client-secret duckfleet-gmail-refresh-token; do
   gcloud secrets add-iam-policy-binding "$s" --project "$PROJECT" \
     --member="serviceAccount:$SA" --role=roles/secretmanager.secretAccessor -q >/dev/null 2>&1 || true
 done
@@ -72,8 +76,8 @@ echo "== Deploy Cloud Run service (profile id: $PROFILE_ID) =="
 gcloud run deploy "$SERVICE" --source . --region "$REGION" --project "$PROJECT" \
   --command=python --args="-m,runtimes.gcp_adk.onboard_service" \
   --allow-unauthenticated --max-instances=1 --cpu=1 --memory=1Gi \
-  --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=TRUE,GOOGLE_CLOUD_PROJECT=$PROJECT,GOOGLE_CLOUD_LOCATION=global,DUCKFLEET_PROJECT_ID=$PROJECT,DUCKFLEET_REGION=$REGION,DUCKFLEET_MODEL_FAST=gemini-3.7-flash,DUCKFLEET_MODEL_STRONG=gemini-3.7-flash,DUCKFLEET_PROFILE_ID=$PROFILE_ID,GOOGLE_OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID,DUCKFLEET_GMAIL_SENDER=$SENDER" \
-  --set-secrets="DUCKFLEET_GMAIL_CLIENT_ID=duckfleet-gmail-client-id:latest,DUCKFLEET_GMAIL_CLIENT_SECRET=duckfleet-gmail-client-secret:latest,DUCKFLEET_GMAIL_REFRESH_TOKEN=duckfleet-gmail-refresh-token:latest"
+  --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=TRUE,GOOGLE_CLOUD_PROJECT=$PROJECT,GOOGLE_CLOUD_LOCATION=global,DUCKFLEET_PROJECT_ID=$PROJECT,DUCKFLEET_REGION=$REGION,DUCKFLEET_MODEL_FAST=gemini-3.7-flash,DUCKFLEET_MODEL_STRONG=gemini-3.7-flash,DUCKFLEET_PROFILE_ID=$PROFILE_ID,GOOGLE_OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID,DUCKFLEET_RESEND_FROM=$RESEND_FROM,DUCKFLEET_LIST_UNSUBSCRIBE=$LIST_UNSUB,DUCKFLEET_GMAIL_SENDER=$SENDER" \
+  --set-secrets="DUCKFLEET_RESEND_API_KEY=duckfleet-resend-api-key:latest,DUCKFLEET_GMAIL_CLIENT_ID=duckfleet-gmail-client-id:latest,DUCKFLEET_GMAIL_CLIENT_SECRET=duckfleet-gmail-client-secret:latest,DUCKFLEET_GMAIL_REFRESH_TOKEN=duckfleet-gmail-refresh-token:latest"
 
 URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT" \
         --format='value(status.url)')

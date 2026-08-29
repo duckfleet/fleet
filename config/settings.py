@@ -41,8 +41,24 @@ class Settings(BaseSettings):
     # later: per-user from the profile UI). Set DUCKFLEET_NOTIFY_EMAIL in .env.
     notify_email: str = ""
 
+    # Resend (transactional ESP) — the PREFERRED sender: an own-domain, authenticated path
+    # that actually reaches the inbox (a consumer @gmail.com sender lands in spam). The API
+    # key is read ONLY from env / Secret Manager, never committed. When resend_api_key +
+    # resend_from are both set, send_brief() uses Resend; otherwise it falls back to Gmail.
+    # NOTE: Resend only accepts arbitrary recipients once you VERIFY duckfleet.dev in the
+    # Resend dashboard and send from an address on it (e.g. "DuckFleet <hunt@duckfleet.dev>").
+    # Until verified, Resend only allows from "onboarding@resend.dev" to your OWN account email.
+    resend_api_key: str = ""
+    resend_from: str = ""           # e.g. "DuckFleet <hunt@duckfleet.dev>"
+    # List-Unsubscribe header value (bulk-inbox deliverability; replaces "reply STOP"). A
+    # mailto or an https one-click URL, WITHOUT angle brackets, e.g.
+    # "mailto:stop@duckfleet.dev" or "https://duckfleet.dev/unsubscribe?u=TOKEN". An https
+    # value also emits the RFC 8058 one-click POST header. Blank = header omitted.
+    list_unsubscribe: str = ""
+
     # Gmail send credentials — read ONLY from env / Secret Manager, NEVER hardcoded
-    # or committed. Get a refresh token once via scripts/gmail_authorize.py.
+    # or committed. Get a refresh token once via scripts/gmail_authorize.py. Fallback sender
+    # (used only when Resend is not configured).
     gmail_sender: str = ""          # e.g. duckfleet.dev@gmail.com (blank -> "me")
     gmail_client_id: str = ""
     gmail_client_secret: str = ""

@@ -3,7 +3,7 @@
   "offer": {
     "id": "bigw-duck-2026",
     "source": "manual",
-    "source_url": "https://example.com/demo-fixture",
+    "source_url": "https://example.com",
     "merchant": "BigW",
     "program": "qantas_ff",
     "offer_type": "collectible",
