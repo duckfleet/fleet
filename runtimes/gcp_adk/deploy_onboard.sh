@@ -11,7 +11,9 @@ set -euo pipefail
 export CLOUDSDK_CONFIG="${CLOUDSDK_CONFIG:-$HOME/.config/gcloud-duckfleet}"
 PROJECT=duckfleet-agents
 REGION=us-central1
-SERVICE=duckfleet-onboard
+# Product deploy target (new URL). The frozen HACKATHON page stays as `duckfleet-onboard` and
+# is never touched by this script. Override with DUCKFLEET_SERVICE=... only if you mean to.
+SERVICE="${DUCKFLEET_SERVICE:-duckfleet-app-onboard}"
 PROFILE_ID="${DUCKFLEET_PROFILE_ID:-default}"   # fleet-run profile id (see note at end)
 
 # Google sign-in gate (keeps bots off the public URL; gives per-user profiles keyed by

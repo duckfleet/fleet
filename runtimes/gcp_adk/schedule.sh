@@ -6,7 +6,10 @@ set -euo pipefail
 export CLOUDSDK_CONFIG="${CLOUDSDK_CONFIG:-$HOME/.config/gcloud-duckfleet}"
 PROJECT=duckfleet-agents
 REGION=us-central1
-JOB=duckfleet-nightly
+# Points the nightly trigger at the PRODUCT job (Resend + cleaned brief). Running this repoints
+# the existing `nightly-hunt` schedule to the product job, so the frozen hackathon job stops
+# firing nightly (it stays deployed, just untriggered). Override with DUCKFLEET_JOB=... if needed.
+JOB="${DUCKFLEET_JOB:-duckfleet-app-nightly}"
 SCHED=nightly-hunt
 
 SA=$(gcloud iam service-accounts list --project "$PROJECT" \

@@ -12,7 +12,9 @@ set -euo pipefail
 export CLOUDSDK_CONFIG="${CLOUDSDK_CONFIG:-$HOME/.config/gcloud-duckfleet}"
 PROJECT=duckfleet-agents
 REGION=us-central1
-JOB=duckfleet-nightly
+# Product deploy target. The frozen HACKATHON job stays as `duckfleet-nightly` and is never
+# touched by this script. Override with DUCKFLEET_JOB=... only if you deliberately mean to.
+JOB="${DUCKFLEET_JOB:-duckfleet-app-nightly}"
 REPLAY="${DUCKFLEET_REPLAY:-false}"   # false = live hunt; set true for the hero-duck demo brief
 # Set to the id the onboarding page writes (e.g. "default") to read the household profile from
 # Firestore (duckfleet_profiles/<id>). Blank = use profile.json / env defaults only.
