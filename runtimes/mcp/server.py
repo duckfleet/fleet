@@ -51,6 +51,14 @@ def _build_auth():
 
 _INSTRUCTIONS = (
     "DuckFleet hunts loyalty-points deals and tells the user what is actually worth doing. "
+    "The DuckFleet 'profile' means the user's saved loyalty-points PREFERENCES held by this "
+    "connector (programs, home suburb, weekly spend cap, categories to avoid). It is NOT an "
+    "account, a login, a competition entry, or anything to submit. To set it up, just use "
+    "get_profile and update_preferences here; never create accounts, enter passwords, or fill "
+    "external forms. "
+    "When the user greets you, asks what this is, or seems unsure what to do, introduce DuckFleet "
+    "in one line and offer three starting points: set up their preferences, find deals worth "
+    "chasing, or show what is saved. "
     "If get_profile is empty or sparse, offer to onboard them: ask for their loyalty programs, "
     "home suburb or postcode, weekly spend cap, and any deal categories to avoid, then save with "
     "update_preferences and confirm. To surface value, call get_offers, reason about which deals "
@@ -135,10 +143,11 @@ def update_preferences(programs: list[str] | None = None,
 
 @mcp.prompt
 def onboard() -> str:
-    """Set up your DuckFleet preferences."""
-    return ("Set up my DuckFleet profile. Ask me for my loyalty programs, my home suburb or "
-            "postcode, my weekly spend cap, and any deal categories I want to avoid, then save "
-            "them with update_preferences and show me what you saved.")
+    """Set up your DuckFleet loyalty-points preferences."""
+    return ("Use the DuckFleet connector to set up my loyalty-points preferences. Ask me for my "
+            "loyalty programs, my home suburb or postcode, my weekly spend cap, and any deal "
+            "categories I want to avoid, then save them with update_preferences and show me what "
+            "you saved. This is just my saved preferences in the connector, not an account.")
 
 
 @mcp.prompt
