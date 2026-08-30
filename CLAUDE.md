@@ -114,6 +114,7 @@ runtimes/
 docs/              # architecture diagram
 demo/gcp-hackathon/  # ARCHIVED hackathon material (video/podcast/shot-list) — reference only
 devlog/            # dated build log + design rationale
+social/            # building-in-public posting log: voice guide + post archive/drafts
 CLAUDE.md README.md LICENSE .gitignore
 ```
 
@@ -146,10 +147,11 @@ CLAUDE.md README.md LICENSE .gitignore
 - **Multi-provider support** (headline): finish `model_factory.py` for Anthropic / OpenAI /
   Gemini / Vertex with clean per-provider defaults and a setup path. This is the enabler for
   "anyone with a Claude/ChatGPT/Gemini key can run it."
-- **Usability / distribution:** shrink the setup wall. Options to weigh (don't lock blindly):
-  a friendlier CLI/quickstart, a provider-setup wizard, and whether DuckFleet should also be
-  reachable *from inside* Claude/ChatGPT/Gemini (e.g. an MCP server / tool) so users invoke it
-  from an assistant they already use.
+- **Distribution via the user's assistant (MCP) — the active direction.** Ship DuckFleet as a
+  connector users add to Claude / ChatGPT (Gemini consumer not yet), so they onboard by chatting
+  and it runs on *their* model billing ($0 inference to us). Inverts where the LLM lives: the
+  assistant orchestrates, our tools stay deterministic. Full design + phased plan in
+  `devlog/2026-08-30-mcp-distribution.md`. The web page demotes to a landing/CTA surface.
 - **Shopping-habits valuation:** add `regular_merchants` to the profile; treat spend you'd
   make anyway as free in `_value()` → fixes "spend $X get pts" offers that currently value low.
 - **Online vs in-store `fulfilment` flag** (no drive penalty for online).
@@ -168,3 +170,6 @@ use the `claude-api` skill rather than answering from memory.
 - Prefer fixing the **root cause** over a workaround.
 - Public voice reads as a **real project**, first-person, no marketing/AI-slop cadence, no
   em-dashes in user-facing copy.
+- **Building in public:** LinkedIn posts, the voice guide, and the post archive/drafts live in
+  `social/posting-log.md`. Match that voice and update the log whenever a post ships or a draft
+  is written, so any session can continue the thread.
