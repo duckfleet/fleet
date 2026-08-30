@@ -72,13 +72,22 @@ The assistant reads offers + profile, does the fuzzy matching / summarizing itse
 these tools for every number and every gate. Nothing that touches money or a phone runs
 without the user present in their own session.
 
-## Provider landscape (verify before promising — moves fast)
-- **ChatGPT:** MCP Apps compatible; real Apps Directory + review flow. The "just ask ChatGPT"
-  path.
-- **Claude:** connectors directory open for remote MCP servers (Team/Enterprise org to submit;
-  tool annotations; privacy policy).
-- **Gemini:** consumer app has **no** custom MCP connectors yet (only CLI / Enterprise / the
-  invite-only Spark tier). Park consumer Gemini; support Gemini CLI for developers.
+## Provider landscape + tier availability (verify — moves fast)
+Custom-URL connector addition and directory listing differ in REACH: raw custom-URL is gated/
+limited; vetted/directory tends to be broader. The directory is therefore the reach channel, not
+a nice-to-have. Snapshot (Aug 2026, re-verify before promising):
+- **Claude (most open):** custom remote-MCP connectors on ALL plans incl. Free per Anthropic docs
+  (Free = ONE custom connector; paid = more). Best mass channel; lead here. Some third-party
+  sources wrongly say Pro-only, and real free-account UX should be tested. Directory submission
+  needs a Team/Enterprise org (+ tool annotations, privacy policy).
+- **ChatGPT (paid + writes gated):** custom MCP via Developer mode = Plus/Pro/Business/Enterprise/
+  Edu, NOT Free. Individual Plus/Pro = READ/fetch-only; WRITE tools (our `update_preferences`)
+  need Business/Enterprise/Edu. So onboarding-by-chat WRITES are gated on individual plans — make
+  the read value (get_offers + worth_it) stand alone. Apps Directory is the broader path.
+- **Gemini:** consumer app has NO custom MCP yet (only CLI / Enterprise / invite-only Spark).
+- **Implication:** lead with Claude; treat the DIRECTORIES (not custom-URL) as reach; keep
+  non-connector on-ramps (web sample page, llms.txt / "paste this to your assistant") for free and
+  unsupported users so nobody is fully locked out.
 
 ## Doctrine updates to CLAUDE.md (make deliberately)
 - Multi-tenant is now **in** (it was hackathon-scoped out). The *spirit* survives: $0 inference

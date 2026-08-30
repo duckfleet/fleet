@@ -3,89 +3,146 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>DuckFleet — Onboarding</title>
+<title>DuckFleet</title>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --page:#f4f5f7; --card:#fffaf3; --ink:#3a2f2a; --muted:#9a8577;
-    --coral:#ef6b52; --line:#f2e6da; --ok:#2f9e63; --err:#c0392b;
+    --page:#f0ece6; --card:#fffaf3; --ink:#33291f; --muted:#8f7b6c;
+    --coral:#ef6b52; --line:#efe1d3; --ok:#2f9e63; --err:#c0392b;
+    --soft:#fff5ea; --chip:#f6ede1;
     --bot:#fff3ea; --botline:#ffe3d2; --me:#eef1f6; --meline:#e4e8f0;
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
+  html{height:100%}
   body{
-    margin:0; background:var(--page); color:var(--ink);
+    margin:0; min-height:100%; background:var(--page); color:var(--ink);
     font:16px/1.5 "Nunito","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
-    display:flex; align-items:center; justify-content:center; padding:24px;
+    -webkit-font-smoothing:antialiased;
+    display:flex; align-items:flex-start; justify-content:center; padding:30px 20px;
   }
   .card{
-    width:100%; max-width:480px; background:var(--card); border:1px solid var(--line);
+    width:100%; max-width:540px; background:var(--card); border:1px solid var(--line);
     border-radius:26px; overflow:hidden; box-shadow:0 24px 55px -22px rgba(120,80,50,.28);
-    display:flex; flex-direction:column; max-height:94vh;
+    display:flex; flex-direction:column;
   }
-  header{padding:22px 24px 4px}
   .brandrow{display:flex; align-items:center; gap:13px}
-  .duckbadge{width:50px; height:50px; border-radius:15px; background:#fff1e2; flex:none;
+  .duckbadge{width:50px; height:50px; border-radius:15px; background:var(--soft); flex:none;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 4px 10px -4px rgba(239,107,82,.35)}
-  .brand{font-weight:800; font-size:23px; letter-spacing:-.3px}
-  .pill{margin-left:auto; font-size:10.5px; letter-spacing:.04em; font-weight:800; white-space:nowrap;
-    color:var(--coral); border:1px solid #ffd9c8; background:#fff1ea; border-radius:999px; padding:4px 11px}
-  .tag{color:var(--muted); font-size:13px; margin:12px 2px 0; line-height:1.5}
-  .who{font-size:12px; color:var(--muted); margin:8px 2px 0}
-  .who b{color:var(--ink)}
-  .steps{display:flex; gap:8px; margin:18px 0 6px}
-  .step{flex:1; background:#fff5ea; border:1px solid var(--line); border-radius:16px; padding:11px 6px; text-align:center}
+  .brand{font-weight:900; font-size:23px; letter-spacing:-.4px}
+  .pill{margin-left:auto; font-size:10.5px; letter-spacing:.11em; font-weight:800; white-space:nowrap;
+    color:var(--coral); border:1px solid var(--line); background:var(--soft); border-radius:999px; padding:5px 11px}
+
+  /* landing */
+  #landing{display:flex; flex-direction:column; gap:22px; padding:28px 26px 22px}
+  .headline{font-weight:900; font-size:31px; line-height:1.09; letter-spacing:-.8px; margin:16px 0 0; text-wrap:balance}
+  .hl{color:var(--coral)}
+  .tagline{color:var(--muted); font-size:15px; line-height:1.6; margin:12px 0 0; max-width:47ch}
+  .entries{display:grid; grid-template-columns:1fr 1fr; gap:13px; align-items:start}
+  .entry{background:var(--soft); border:1px solid var(--line); border-radius:18px; padding:15px;
+    display:flex; flex-direction:column; gap:10px}
+  .entry-top{display:flex; align-items:center; gap:9px}
+  .ei{width:30px; height:30px; border-radius:9px; background:var(--card); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; flex:none}
+  .ei svg{width:17px; height:17px}
+  .eb{font-weight:800; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+  .cta{display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    background:var(--coral); color:#fff; text-decoration:none; font-weight:800; font-size:14.5px;
+    padding:12px 14px; border-radius:13px; border:0; cursor:pointer; font-family:inherit;
+    box-shadow:0 10px 20px -9px rgba(239,107,82,.6); transition:transform .12s ease}
+  .cta:hover{transform:translateY(-1px)}
+  .cta.alt{background:transparent; color:var(--coral); border:1.5px solid var(--coral); box-shadow:none}
+  .cta.alt:hover{background:var(--card); transform:translateY(-1px)}
+  .say{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; background:var(--chip);
+    border:1px solid var(--line); border-radius:12px; padding:9px 11px}
+  .say-lab{font-weight:800; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); flex:none}
+  .say code{font-family:"DM Mono",ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; line-height:1.5; color:var(--ink)}
+  .efine{font-size:11.5px; color:var(--muted); margin:0}
+  .sectlabel{font-weight:800; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0}
+  .paste{display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--chip);
+    border:1px dashed var(--line); border-radius:12px; padding:10px 12px}
+  .paste code{font-family:"DM Mono",ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; color:var(--ink); word-break:break-all}
+  .copy{font-weight:800; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--coral);
+    background:transparent; border:1px solid var(--line); border-radius:8px; padding:6px 9px; cursor:pointer; font-family:inherit; flex:none}
+  .copy:hover{background:var(--soft)}
+  .samplerow{display:flex; flex-direction:column; gap:9px}
+  .sample-lead{font-size:14px; color:var(--ink); margin:0}
+  .cta.sample{width:auto; align-self:flex-start; font-size:14px; padding:11px 16px}
+  .steps{display:flex; gap:9px}
+  .step{flex:1; background:var(--soft); border:1px solid var(--line); border-radius:15px; padding:12px 8px; text-align:center}
   .step .ic{font-size:19px; line-height:1}
-  .step .lab{font-size:11px; color:var(--muted); margin-top:5px; font-weight:700; line-height:1.3}
-  .step .n{font-size:10px; color:var(--coral); font-weight:800; letter-spacing:.04em; margin-top:2px}
-  /* sign-in gate */
-  #gate{padding:26px 24px 34px; text-align:center}
+  .step .lab{font-size:12px; color:var(--ink); margin-top:6px; font-weight:800; line-height:1.3}
+  .step .n{font-size:9.5px; color:var(--coral); font-weight:800; letter-spacing:.05em; margin-top:3px}
+  .trust{font-size:12.5px; color:var(--muted); line-height:1.6; text-align:center; margin:0}
+  .foot{border-top:1px solid var(--line); padding-top:16px; text-align:center}
+  .foot .meta{font-size:11.5px; color:var(--muted)}
+
+  /* app view (sign-in + chat) */
+  .appbar{display:flex; align-items:center; gap:10px; padding:16px 20px 4px}
+  .backbtn{background:transparent; border:0; color:var(--coral); font-weight:800; font-size:14px; cursor:pointer; font-family:inherit; padding:4px 6px}
+  .appbar .brand{font-size:18px}
+  .who{font-size:12px; color:var(--muted); margin-left:auto}
+  .who b{color:var(--ink)}
+  #gate{padding:24px 24px 32px; text-align:center}
   #gate h3{margin:6px 0 0; font-size:18px; font-weight:800}
   #gate p{color:var(--muted); max-width:420px; margin:10px auto 20px; font-size:14px}
   #gbtn{display:flex; justify-content:center}
-  /* chat */
-  #log{padding:16px 20px 8px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:11px; min-height:200px}
+  #log{padding:14px 20px 6px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:11px; min-height:200px; max-height:min(54vh,440px)}
   .msg{max-width:86%; padding:11px 14px; border-radius:15px; white-space:pre-wrap; word-wrap:break-word; font-size:14.5px; line-height:1.5}
   .bot{align-self:flex-start; background:var(--bot); border:1px solid var(--botline); border-top-left-radius:5px; color:#4a3b32}
   .me{align-self:flex-end; background:var(--me); border:1px solid var(--meline); border-top-right-radius:5px; color:#3a4150}
   .typing{align-self:flex-start; color:var(--muted); font-size:14px}
   .pcard{align-self:stretch; border-radius:15px; padding:13px 15px}
   .pcard.ok{background:linear-gradient(180deg,#effaf3,#e7f6ee); border:1px solid #cdeede}
-  .pcard.cur{background:#fff5ea; border:1px solid var(--line)}
+  .pcard.cur{background:var(--soft); border:1px solid var(--line)}
   .pcard h4{margin:0 0 7px; font-size:14px; font-weight:800}
   .pcard.ok h4{color:var(--ok)} .pcard.cur h4{color:var(--coral)}
   .pcard ul{margin:0; padding-left:18px; font-size:13px}
   .pcard.ok ul{color:#3d6a55} .pcard.cur ul{color:#6a584c}
   .pcard li{line-height:1.6}
   .pcard .note{margin-top:9px; color:var(--muted); font-size:12.5px}
-  .errbar{align-self:stretch; background:#fdecea; border:1px solid #f6ccc6; color:var(--err);
-    border-radius:12px; padding:11px 14px; font-size:14px}
+  .errbar{align-self:stretch; background:#fdecea; border:1px solid #f6ccc6; color:var(--err); border-radius:12px; padding:11px 14px; font-size:14px}
   .hint{padding:0 22px 12px; color:var(--muted); font-size:12px}
   .actions{display:flex; align-items:center; gap:14px; padding:2px 22px 12px; flex-wrap:wrap}
   button.ghost{background:transparent; color:var(--coral); border:1.5px solid var(--coral);
     border-radius:12px; padding:9px 14px; font-size:13.5px; font-weight:800; cursor:pointer; font-family:inherit}
-  button.ghost:hover{background:#fff1ea}
+  button.ghost:hover{background:var(--soft)}
   button.ghost:disabled{opacity:.5; cursor:default}
   .keep{display:flex; align-items:center; gap:7px; color:var(--muted); font-size:13px; cursor:pointer}
   .keep input{accent-color:var(--coral); width:15px; height:15px}
   form{display:flex; gap:10px; padding:14px 18px; border-top:1px solid var(--line); background:#fffdf9}
-  input{flex:1; background:#fff; color:var(--ink); border:1.5px solid var(--line);
-    border-radius:14px; padding:12px 14px; font-size:14.5px; outline:none; font-family:inherit}
+  input{flex:1; background:#fff; color:var(--ink); border:1.5px solid var(--line); border-radius:14px; padding:12px 14px; font-size:14.5px; outline:none; font-family:inherit}
   input::placeholder{color:#b6a595}
   input:focus{border-color:var(--coral)}
-  button.send{background:var(--coral); color:#fff; border:0; border-radius:14px; padding:0 20px;
-    font-weight:800; font-size:14.5px; cursor:pointer; font-family:inherit; box-shadow:0 8px 18px -6px var(--coral)}
+  button.send{background:var(--coral); color:#fff; border:0; border-radius:14px; padding:0 20px; font-weight:800; font-size:14.5px; cursor:pointer; font-family:inherit; box-shadow:0 8px 18px -6px var(--coral)}
   button.send:disabled{opacity:.5; cursor:default; box-shadow:none}
+
+  /* add-to-Claude modal */
+  .modal{position:fixed; inset:0; background:rgba(40,28,20,.5); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50}
+  .sheet{background:var(--card); border:1px solid var(--line); border-radius:22px; max-width:430px; width:100%; padding:24px 24px 20px; position:relative; box-shadow:0 30px 70px -30px rgba(0,0,0,.5)}
+  .sheet h3{margin:0 30px 0 0; font-size:19px; font-weight:900}
+  .sheet .x{position:absolute; top:14px; right:15px; background:transparent; border:0; font-size:15px; color:var(--muted); cursor:pointer; font-family:inherit}
+  .how{margin:14px 0; padding-left:20px; font-size:14px; line-height:1.75; color:var(--ink)}
+  .how b{font-weight:800}
+
+  a:focus-visible, button:focus-visible{outline:2.5px solid var(--coral); outline-offset:3px; border-radius:8px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
   .hide{display:none !important}
+  @media (max-width:520px){
+    #landing{padding:24px 20px 20px}
+    .headline{font-size:27px}
+    .entries{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
   <div class="card">
-    <header>
+
+    <!-- LANDING -->
+    <div id="landing">
       <div class="brandrow">
         <span class="duckbadge">
           <!-- Duck: Google Noto Emoji 🦆 (U+1F986), Apache License 2.0. See onboard_static/CREDITS.txt -->
@@ -101,43 +158,112 @@
             <path fill="#B0B0B1" d="M85.67,55.69c2.35-0.28,12.66-3.54,16.33-2.6c4.43,1.13,8.85,4.25,7.95,14.15c-1.16,12.85-10.29,20.68-14.22,22.83C88.7,93.91,81.94,94,81.94,94S83.33,55.97,85.67,55.69z"/>
             <path fill="#FFBF18" d="M7.12,25.07c0,1.2,7.46,4.72,14.5,5.56s11.4-0.28,11.4-0.28s-1.2-3.03-1.2-5.28s1.16-7.9-0.63-9.22c-1.62-1.2-2.96,1.27-3.94,1.97c-0.99,0.7-3.8,2.67-8.17,2.82s-8.17-0.56-9.71,0.28S7.12,23.8,7.12,25.07z"/>
             <path fill="#2D2B33" d="M50.2,20.77c-0.42,1.75-1.61,3.12-3.94,2.75c-2.18-0.35-3.24-2.6-2.6-4.79c0.5-1.73,1.79-2.9,3.97-2.53C50.13,16.62,50.6,19.08,50.2,20.77z"/>
-            <path fill="#73DF86" d="M50.92,25.57c2.47-0.78,4.3-0.79,4.04-2.47c-0.3-1.93-3.51-1.38-5.55-0.3c-2.17,1.15-4.99,3.11-3.74,4.7C47,29.19,49.5,26.02,50.92,25.57z"/>
             <path fill="#FFFFFF" d="M33.16,51.6c0,0,2.16,9.43,12.95,7.84c7.71-1.14,13.42-4.97,13.42-4.97l0.09-6.29c0,0-5.12,3-11.26,2.91c-6.38-0.09-11.92-3.38-11.92-3.38L33.16,51.6z"/>
             <path fill="#84574E" d="M26.03,69.11C25.28,89.56,40.7,99.28,65.17,99.7c27.12,0.47,37.61-15.44,39.23-25.43c1.69-10.45-5.07-12.67-5.07-12.67s6.76-2.82,3.73-9.5c-1.41-0.28-8.35,1.57-21.54,0.21c-13.1-1.35-22.08,0.94-22.08,0.94s-3.28,3.57-12.67,3.1c-11.25-0.56-13.42-4.97-13.42-4.97S26.5,56.39,26.03,69.11z"/>
             <path fill="#B79277" d="M52.03,73.14c2.28,7.9,10.42,12.67,22.52,12.11c10.98-0.51,18.96-8.17,20.27-14.92c1.43-7.34-1.55-10.14-1.55-10.14s6.34-2.3,6.34-6.76c-3.57-2.16-14.92-3.66-27.5-4.13c-8.16-0.3-12.76,2.72-12.76,2.72S47.8,58.5,52.03,73.14z"/>
           </svg>
         </span>
         <div class="brand">DuckFleet</div>
-        <span class="pill">RUNS ON GOOGLE CLOUD</span>
+        <span class="pill">OPEN SOURCE</span>
       </div>
-      <div class="tag">Hunts loyalty points while you sleep — starting with the $3.50 rubber duck that was secretly a business-class seat.</div>
-      <div class="who hide" id="who"></div>
+
+      <div>
+        <h1 class="headline">Hunts loyalty points <span class="hl">while you sleep</span>.</h1>
+        <p class="tagline">It started with a $3.50 rubber duck that was secretly a business-class seat. Tell DuckFleet your programs once. It hunts overnight and sends a ranked morning brief of what is worth doing, and what it skipped, with reasons.</p>
+      </div>
+
+      <div class="entries">
+        <div class="entry">
+          <div class="entry-top">
+            <span class="ei" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><g stroke="#ef6b52" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v19M2.5 12h19M5.4 5.4l13.2 13.2M18.6 5.4L5.4 18.6"/></g></svg></span>
+            <span class="eb">In your assistant</span>
+          </div>
+          <button class="cta" id="addClaude" type="button">Add to Claude</button>
+          <div class="say"><span class="say-lab">then say</span><code>Set up my DuckFleet preferences</code></div>
+          <p class="efine">Also ChatGPT (Plus and up). Runs on your own model.</p>
+        </div>
+        <div class="entry">
+          <div class="entry-top">
+            <span class="ei" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#8f7b6c" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><ellipse cx="12" cy="12" rx="4" ry="9"/></svg></span>
+            <span class="eb">On the web</span>
+          </div>
+          <button class="cta alt" id="openWeb" type="button">Open the web app</button>
+          <div class="say"><span class="say-lab">then say</span><code>Qantas and Flybuys, no more credit cards, I&rsquo;d switch electricity for good points, $100 a week, brief me at me@example.com, I&rsquo;m in Bondi 2026.</code></div>
+          <p class="efine">No assistant needed. Quick Google sign-in.</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="sectlabel" style="margin-bottom:9px">Any other assistant that browses the web</div>
+        <div class="paste">
+          <code id="llmsLine">set up DuckFleet: app.duckfleet.dev/llms.txt</code>
+          <button class="copy" id="llmsCopy" type="button">Copy</button>
+        </div>
+      </div>
+
+      <div class="samplerow">
+        <div class="sectlabel">No assistant? See it first</div>
+        <p class="sample-lead">A real sample brief in your inbox, from the same overnight run. Quick Google sign-in, no other setup.</p>
+        <button class="cta sample" id="landingSample" type="button">Email me a sample brief</button>
+      </div>
+
       <div class="steps">
-        <div class="step"><div class="ic">💬</div><div class="lab">Tell us once</div><div class="n">30 SEC</div></div>
-        <div class="step"><div class="ic">🌙</div><div class="lab">We hunt overnight</div><div class="n">ON GCP</div></div>
+        <div class="step"><div class="ic">🗣️</div><div class="lab">Tell it once</div><div class="n">30 SEC</div></div>
+        <div class="step"><div class="ic">🌙</div><div class="lab">Hunts overnight</div><div class="n">STACKS · CPP</div></div>
         <div class="step"><div class="ic">✉️</div><div class="lab">Morning brief</div><div class="n">RANKED</div></div>
       </div>
-    </header>
 
-    <!-- Sign-in gate -->
-    <div id="gate" class="hide">
-      <h3>Sign in to set up your fleet</h3>
-      <p>DuckFleet saves your loyalty profile to your Google account, so only you can see and edit it. Sign in with Google to continue.</p>
-      <div id="gbtn"></div>
+      <p class="trust">Governed by design: it refuses, asks, and logs. The maths is deterministic, and the skips are real.</p>
+
+      <div class="foot">
+        <div class="meta">Open source · github.com/duckfleet/fleet · building in public</div>
+      </div>
     </div>
 
-    <!-- Chat -->
-    <div id="app" class="hide" style="display:flex;flex-direction:column;flex:1;min-height:0">
-      <div id="log"></div>
-      <div id="actions" class="actions hide">
-        <button id="sample" class="ghost" type="button">✉️ Email me a sample brief</button>
-        <label class="keep"><input type="checkbox" id="keep" /> Keep me posted about DuckFleet</label>
+    <!-- APP VIEW (sign-in + chat) -->
+    <div id="appview" class="hide" style="display:flex; flex-direction:column; min-height:0">
+      <div class="appbar">
+        <button class="backbtn" id="back" type="button">← Back</button>
+        <div class="brand">DuckFleet</div>
+        <div class="who hide" id="who"></div>
       </div>
-      <div class="hint">Try: “Qantas and Flybuys, no more credit cards, I’d switch electricity for good points, $100 a week, brief me at me@example.com, I’m in Bondi 2026.”</div>
-      <form id="f">
-        <input id="m" autocomplete="off" placeholder="What would you like to add or change?" />
-        <button class="send" id="send" type="submit">Send</button>
-      </form>
+
+      <div id="gate" class="hide">
+        <h3>Sign in to set up your fleet</h3>
+        <p>DuckFleet saves your loyalty profile to your Google account, so only you can see and edit it. Sign in with Google to continue.</p>
+        <div id="gbtn"></div>
+      </div>
+
+      <div id="app" class="hide" style="display:flex;flex-direction:column;flex:1;min-height:0">
+        <div id="log"></div>
+        <div id="actions" class="actions hide">
+          <button id="sample" class="ghost" type="button">✉️ Email me a sample brief</button>
+          <label class="keep"><input type="checkbox" id="keep" /> Keep me posted about DuckFleet</label>
+        </div>
+        <div class="hint">Try: “Qantas and Flybuys, no more credit cards, I’d switch electricity for good points, $100 a week, brief me at me@example.com, I’m in Bondi 2026.”</div>
+        <form id="f">
+          <input id="m" autocomplete="off" placeholder="What would you like to add or change?" />
+          <button class="send" id="send" type="submit">Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add-to-Claude how-to -->
+  <div id="claudeModal" class="modal hide">
+    <div class="sheet">
+      <button class="x" id="mClose" type="button" aria-label="Close">✕ Close</button>
+      <h3>Add DuckFleet to Claude</h3>
+      <ol class="how">
+        <li>In Claude, open <b>Settings → Connectors</b>.</li>
+        <li>Click <b>Add custom connector</b>.</li>
+        <li>Paste this URL and finish:</li>
+      </ol>
+      <div class="paste">
+        <code id="mcpUrl">https://mcp.duckfleet.dev/mcp</code>
+        <button class="copy" id="mCopy" type="button">Copy</button>
+      </div>
+      <p class="efine" style="margin-top:14px">Then in any chat, say <b>“Set up my DuckFleet preferences.”</b> Custom connectors need a paid Claude plan. ChatGPT: Settings → Connectors (Plus and up).</p>
     </div>
   </div>
 
@@ -148,6 +274,7 @@ let sessionId = null;      // per-conversation (not persisted; fresh each visit)
 let idToken = null;        // Google ID token
 let authRequired = false;
 let sampleAvailable = false;
+let pendingSample = false; // set when the landing sample button routes through sign-in
 
 function authHeaders(){
   const h = {'Content-Type':'application/json'};
@@ -210,6 +337,7 @@ async function startChat(){
   }
   if (sampleAvailable) $('actions').classList.remove('hide');
   $('m').focus();
+  if (pendingSample){ pendingSample = false; if (sampleAvailable) sendSample(); }
 }
 
 async function sendSample(){
@@ -254,11 +382,41 @@ async function send(text){
   finally { $('m').disabled=false; $('send').disabled=false; $('m').focus(); }
 }
 
-$('f').addEventListener('submit', e => {
-  e.preventDefault(); const text = $('m').value.trim(); if (text) send(text);
-});
+// --- view switching ---
+function enterApp(){
+  $('landing').classList.add('hide');
+  $('appview').classList.remove('hide');
+  if (authRequired && !idToken){ showGate(); } else { startChat(); }
+}
+function backToLanding(){
+  $('appview').classList.add('hide');
+  $('landing').classList.remove('hide');
+  pendingSample = false;
+}
+function showGate(){
+  $('app').classList.add('hide'); $('gate').classList.remove('hide');
+}
+
+// --- add-to-Claude modal ---
+function openModal(){ $('claudeModal').classList.remove('hide'); }
+function closeModal(){ $('claudeModal').classList.add('hide'); }
+function copyText(text, btn){
+  const done = () => { const o = btn.textContent; btn.textContent = 'Copied'; setTimeout(()=>{btn.textContent=o;}, 1400); };
+  if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(()=>{}); }
+}
+
+// --- wiring ---
+$('f').addEventListener('submit', e => { e.preventDefault(); const text = $('m').value.trim(); if (text) send(text); });
 $('sample').addEventListener('click', sendSample);
 $('keep').addEventListener('change', e => setKeep(e.target.checked));
+$('openWeb').addEventListener('click', () => enterApp());
+$('landingSample').addEventListener('click', () => { pendingSample = true; enterApp(); });
+$('back').addEventListener('click', backToLanding);
+$('addClaude').addEventListener('click', openModal);
+$('mClose').addEventListener('click', closeModal);
+$('claudeModal').addEventListener('click', e => { if (e.target === $('claudeModal')) closeModal(); });
+$('mCopy').addEventListener('click', e => copyText($('mcpUrl').textContent, e.currentTarget));
+$('llmsCopy').addEventListener('click', e => copyText($('llmsLine').textContent, e.currentTarget));
 
 // --- Google sign-in ---
 function onCredential(resp){
@@ -267,22 +425,20 @@ function onCredential(resp){
         $('who').innerHTML = 'Signed in as <b>'+ (c.email||'') +'</b>'; $('who').classList.remove('hide'); } catch(e){}
   startChat();
 }
-function showGate(){
-  $('app').classList.add('hide'); $('gate').classList.remove('hide');
-}
 async function boot(){
   let cfg = {auth_required:false, client_id:'', sample_available:false};
   try { cfg = await (await fetch('/api/config')).json(); } catch(e){}
   authRequired = cfg.auth_required;
   sampleAvailable = cfg.sample_available;
-  if (!authRequired){ startChat(); return; }         // local/dev: open mode
-  showGate();
-  const render = () => {
-    if (!(window.google && google.accounts && google.accounts.id)) { setTimeout(render, 150); return; }
-    google.accounts.id.initialize({client_id: cfg.client_id, callback: onCredential});
-    google.accounts.id.renderButton($('gbtn'), {theme:'outline', size:'large', shape:'pill', text:'signin_with'});
-  };
-  render();
+  if (authRequired){
+    const render = () => {
+      if (!(window.google && google.accounts && google.accounts.id)) { setTimeout(render, 150); return; }
+      google.accounts.id.initialize({client_id: cfg.client_id, callback: onCredential});
+      google.accounts.id.renderButton($('gbtn'), {theme:'outline', size:'large', shape:'pill', text:'signin_with'});
+    };
+    render();
+  }
+  // Landing stays visible; the user enters the app via "Open the web app" or the sample button.
 }
 boot();
 </script>

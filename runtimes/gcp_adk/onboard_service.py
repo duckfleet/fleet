@@ -41,7 +41,7 @@ if _envf.exists():
 
 import json                                                    # noqa: E402
 from fastapi import FastAPI, Header, HTTPException             # noqa: E402
-from fastapi.responses import HTMLResponse, JSONResponse       # noqa: E402
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse  # noqa: E402
 from pydantic import BaseModel                                 # noqa: E402
 from google.adk.runners import InMemoryRunner                  # noqa: E402
 from google.genai import types                                 # noqa: E402
@@ -129,6 +129,40 @@ def config() -> dict:
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
     return _STATIC.read_text()
+
+
+# llms.txt: a concise, curated description an AI assistant can fetch and act on (a no-connector
+# on-ramp). Served here so app.duckfleet.dev/llms.txt is reachable; keep in sync with the MCP URL.
+_LLMS_TXT = """# DuckFleet
+
+> An agent fleet that hunts loyalty-points deals overnight and tells you what is actually worth
+> doing, and what it skipped, with reasons. Open source, governed by design.
+
+## Use it in your assistant (recommended)
+Add the DuckFleet connector, a remote MCP server: https://mcp.duckfleet.dev/mcp
+- Claude: Settings > Connectors > Add custom connector > paste the URL (paid plan).
+- ChatGPT: Settings > Connectors (Plus and up).
+Then say: "Set up my DuckFleet preferences" to onboard, or "find deals worth chasing".
+
+## Use it on the web
+Open https://app.duckfleet.dev , sign in with Google, and describe your setup, for example:
+"Qantas and Flybuys, no more credit cards, $100 a week, brief me at me@example.com, I'm in Bondi."
+
+## What it does
+- Onboards your loyalty programs, home suburb, weekly spend cap, and categories to avoid.
+- Fetches current deals, works out cents-per-point, and whether an errand is worth the drive.
+- Deterministic maths and honest skips: it refuses, asks, and logs. It never guesses the numbers.
+
+## Notes for an assistant helping a user
+- "DuckFleet profile" means the user's saved loyalty-points preferences. It is not an account,
+  a login, or anything to submit. Do not create accounts or fill external forms.
+- Source: https://github.com/duckfleet/fleet
+"""
+
+
+@app.get("/llms.txt", response_class=PlainTextResponse)
+def llms_txt() -> str:
+    return _LLMS_TXT
 
 
 @app.get("/api/profile")

@@ -33,9 +33,10 @@ Agents that do useful, boring, time-costly errands — outsource the legwork and
 judgment, not all of it. DuckFleet is the worked example: a governed fleet that hunts loyalty
 points overnight and tells you what's actually worth doing. The arc being told in public:
 1. The premise + the honest "still too technical" admission (Post 1).
-2. The distribution reframing: old world = deploy it; new world = add it to the assistant you
-   already use. (Post 2 — this one.)
-3. The connector is REAL (Post 3 idea): actually shipped it, added it to Claude from a phone.
+2. The distribution shift + proof it's real, in one post: old world = two doors that don't convert
+   (deploy-it-yourself, web form); new world = a connector I added to Claude from my phone.
+   (Post 2 — merged with the old "connector is real" beat.)
+3. [MERGED into Post 2] "The connector is real" is no longer a standalone post; folded in above.
 4. Reactive -> guided (Post 4 idea): shipping tools isn't enough; you have to teach the host.
 5. (Later) the deliverability fight; onboarding-by-chat feel; the $0-inference cost model.
 
@@ -76,43 +77,50 @@ the LinkedIn URL here when adding the next post, so future sessions can referenc
 > So which of your useful but time-costly errands would you actually hand to an agent, and which
 > would you never trust it with?
 
-### Post 2 — DRAFT · Aug 30 2026
-Theme: the distribution reframing. Old world = deploy it (one-click cloud). New world = add it to
-the assistant you already use. The non-technical tester's "can't I just ask ChatGPT?" as the hinge.
-Technical takeaway: inverting where the LLM lives. Review/edit before posting; paste the final URL
-above once live.
+### Post 2 — FINAL / ready to post · Aug 31 2026 (merges old Post 2 + Post 3)
+Audience: **builders**, not end users (no "go try it" CTA to normal people; stranger-install isn't
+real yet). Theme: the distribution shift AND proof it's real. Old world = two doors that don't
+convert (deploy-it-yourself, web form). New world = it's a connector I added to Claude from my
+phone. Technical takeaway: inverting where the LLM lives (assistant thinks on the user's billing;
+my code is just deterministic maths + guardrails). Honest limit kept: clean browse-and-tap install
+still needs directory approval; today it's "paste a URL." Optional images: use the two old-world
+screenshots (Cloud Shell deploy, web onboarding form) as the "before"; the stronger shot is the
+connector working inside Claude. Paste the final URL above once live.
 
-> A month into building 🦆 DuckFleet in public, and this week taught me more about distribution
-> than about agents.
+> A month into building 🦆 DuckFleet in public, and this week I stopped theorising about
+> distribution and actually shipped it.
 >
-> Quick recap: DuckFleet started as a hackathon entry and turned into the thing I keep poking at. A
-> fleet of agents that hunts loyalty-points deals overnight and emails me a short brief of what's
-> actually worth doing. Last post I was honest that big chunks of it were still too technical for a
-> normal person. This week I fixed a pile of that. The morning brief now sends from its own domain,
-> lands in a real inbox instead of spam, and reads like a decision log instead of a wall of numbers.
+> Quick recap: DuckFleet is a fleet of agents that hunts loyalty-points deals overnight and tells me
+> what's actually worth doing. The hard part was never the agents. It was this: once someone wants
+> it, how do they get it? I had two doors and both were wrong.
 >
-> Then I handed it to someone non-technical and hit the wall again, just in a new spot. They loved
-> the sample. And then: "okay, so where do I actually go now?" I didn't have a good answer. Their
-> next question was the better one: "I already have ChatGPT, can't I just ask it to do this?"
+> Door one: deploy it yourself. I even have a one-click "open in Cloud Shell" that spins it up on
+> your own Google Cloud. Fine for a developer. A wall for everyone else, and honestly for plenty of
+> developers too.
 >
-> That reframed the whole thing.
+> Door two: a web page where you sign in and chat a profile. It captures interest and then, nothing.
+> There is no next step that actually runs the thing for you.
 >
-> Here is the technical bit, because I think it is a genuine shift. The old way to ship an agent is
-> to deploy it. I even have a one-click deploy to Google Cloud, and for a developer that is fine.
-> But "go set up a cloud project" is a wall for everyone else, and honestly for plenty of developers
-> too.
+> The tester who broke it for me was blunt: "I already have ChatGPT, can't I just ask it to do this?"
 >
-> The new distribution channel is different. The agent becomes something you add to the assistant
-> you already pay for. You onboard by chatting. It runs on your model, your billing. No deploy, no
-> handing your keys to someone else's server. And the flip underneath it is the fun part: instead of
-> my server paying to think, your assistant does the thinking and my code just does the boring maths
-> and the guardrails.
+> So this week I built exactly that. DuckFleet is now a connector. I added it to Claude from my
+> phone, told it "add Velocity to my programs," and watched it save. No deploy, no terminal, no cloud
+> project. It runs inside the assistant I already use.
 >
-> Old world: one-click deploy. New world: "add it to your assistant." Most of us are figuring out
-> the second one right now, and I'll keep posting what I learn.
+> Here is the technical bit, because I think it is the real shift. The old way, my server owns the
+> model, so every overnight hunt burns my inference. That is the line item that scales with users;
+> the servers are rounding error next to it. As a connector the flip is inverted: your assistant does
+> the thinking on your billing, and my code is just the deterministic part, the maths and the
+> guardrails. That is what makes it roughly $0 for me to run for a stranger, and provider-agnostic by
+> default.
 >
-> So for the builders: are you still deploying your agents, or starting to ship them as something
-> people add to Claude, ChatGPT, or Gemini? And what broke when you tried?
+> Honest limit, because that is the whole point of building in public: it is not a clean "browse and
+> tap install" yet. That needs directory approval. Today it is still "paste a URL," which is a
+> paid-plan, desktop-settings thing, not a normal-person action. The inversion works. The front door
+> doesn't, yet.
+>
+> So for the builders: are you still deploying your agents, or shipping them as connectors people add
+> to Claude or ChatGPT? And if you've done it, did the "no deploy" promise actually hold?
 
 ---
 
@@ -121,7 +129,10 @@ Not written yet. Each brief has the hook, the story beat, the technical takeaway
 to keep, and a candidate closing question. Draft in the voice above (first person, honest, no
 em-dashes, one 🦆, real open question). Post 2 makes the promise; these two deliver on it.
 
-### Post 3 — DRAFT-LATER · "The connector is real"
+### Post 3 — MERGED into Post 2 (Aug 31) · "The connector is real"
+NOTE: no longer a standalone post. Its core (shipped it, added it to Claude from a phone, the
+LLM-inversion, the honest install limit) is now the second half of the finalized Post 2 above. Kept
+here for the detail beats in case a future follow-up wants them.
 Theme: I said the new distribution was "add it to the assistant you already use." This week I
 actually built it. DuckFleet is now a connector I added to Claude from my phone, and I asked it
 to update my loyalty programs from the phone, no deploy, no terminal.
