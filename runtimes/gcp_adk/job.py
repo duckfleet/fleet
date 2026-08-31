@@ -25,7 +25,8 @@ if _envf.exists():
             _k, _v = _l.split("=", 1)
             os.environ.setdefault(_k.strip(), _v.strip())
 
-from agents.fleet import run_fleet                                      # noqa: E402
+from agents.fleet import run_fleet, run_fleet_for_profiles              # noqa: E402
+from agents.profile_store import list_profiles                          # noqa: E402
 from agents.delivery import (email_configured, email_secrets_present,   # noqa: E402
                              active_email_provider, send_brief, render_text, render_html)
 from config.settings import settings                                    # noqa: E402
@@ -33,6 +34,17 @@ from config.settings import settings                                    # noqa: 
 
 async def _main() -> None:
     replay = os.environ.get("DUCKFLEET_REPLAY", "false").lower() in ("1", "true", "yes")
+    subject = f"Your DuckFleet brief for {date.today():%-d %b %Y}"
+
+    # Multi-user path: every onboarded user in Firestore gets their own brief, valued off a
+    # single shared scout. Falls back to the single-recipient default when no profiles exist
+    # (or Firestore is unreachable) — so a brand-new signup tomorrow is picked up with no
+    # redeploy, and today's operator-only setup keeps working unchanged.
+    profiles = list_profiles() if not replay else []
+    if profiles and email_secrets_present():
+        await _run_for_profiles(profiles, subject, replay)
+        return
+
     result = await run_fleet(replay=replay)
     brief = [a.model_dump() for a in result["brief"]]
 
@@ -47,7 +59,6 @@ async def _main() -> None:
 
     # Deliver via Resend (preferred) or Gmail if configured; else say exactly what's missing.
     if email_configured():
-        subject = f"Your DuckFleet brief for {date.today():%-d %b %Y}"
         send_brief(subject, render_text(result), render_html(result))
         print(json.dumps({"event": "brief_emailed", "to": settings.notify_email,
                           "provider": active_email_provider()}))
@@ -59,6 +70,26 @@ async def _main() -> None:
             missing.append("a sender: DUCKFLEET_RESEND_API_KEY + DUCKFLEET_RESEND_FROM "
                            "(preferred), or the DUCKFLEET_GMAIL_* fallback")
         print(json.dumps({"event": "brief_not_emailed", "missing_config": missing}))
+
+
+async def _run_for_profiles(profiles: list, subject: str, replay: bool) -> None:
+    """Scout once, fan out a brief per onboarded user, email each their own."""
+    multi = await run_fleet_for_profiles(profiles, replay=replay)
+    print(json.dumps({"event": "fleet_fanout_complete", "n_offers": multi["n_offers"],
+                      "n_profiles": len(multi["runs"]), "scout_cost": multi["scout_cost"]},
+                     default=str))
+    provider = active_email_provider()
+    for run in multi["runs"]:
+        pid, to, result = run["profile_id"], run["notify_email"], run["result"]
+        if not to:
+            print(json.dumps({"event": "brief_skipped_no_email", "profile_id": pid}))
+            continue
+        try:
+            send_brief(subject, render_text(result), render_html(result), to=to)
+            print(json.dumps({"event": "brief_emailed", "profile_id": pid, "to": to,
+                              "provider": provider, "n_candidates": result["n_candidates"]}))
+        except Exception as e:  # one user's send failure must not sink the rest
+            print(json.dumps({"event": "brief_send_error", "profile_id": pid, "error": str(e)}))
 
     # Operator digest: who newly signed up in the last day (product CRM data, read from the
     # duckfleet_interest lead list). Sends ONLY on a non-quiet day, to DUCKFLEET_ADMIN_EMAIL

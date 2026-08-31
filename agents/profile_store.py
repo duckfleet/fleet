@@ -47,3 +47,20 @@ def read_profile(profile_id: str = "default") -> dict | None:
     except Exception as e:  # noqa: BLE001
         log.warning("firestore read failed (%s); falling back to local profile", e)
         return None
+
+
+def list_profiles() -> list[dict]:
+    """Every saved profile (one per onboarded user), each dict carrying its doc id as
+    `profile_id`. Powers the multi-user nightly fan-out. Best-effort: returns [] if
+    Firestore is unreachable, so an empty/failed list simply falls back to the single
+    default run — a new user tomorrow is picked up with no redeploy."""
+    try:
+        out: list[dict] = []
+        for snap in _client().collection(_COLLECTION).stream():
+            rec = snap.to_dict() or {}
+            rec["profile_id"] = snap.id
+            out.append(rec)
+        return out
+    except Exception as e:  # noqa: BLE001
+        log.warning("firestore list failed (%s); no per-user profiles this run", e)
+        return []

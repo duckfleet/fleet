@@ -100,6 +100,30 @@ def _overlay(profile: dict) -> None:
             setattr(settings, _k, _v)
 
 
+from contextlib import contextmanager  # noqa: E402
+
+
+@contextmanager
+def profile_overrides(profile: dict):
+    """Temporarily overlay one user's profile onto the global settings, then restore.
+
+    The multi-user nightly fan-out (agents/fleet.run_fleet_for_profiles) values the same
+    shared offer pool once per profile: it enters this context so the gates / valuer read
+    THAT user's programs, spend cap and preferences, and restores the originals on exit.
+    Sequential use only (settings is a process-wide singleton) — the fan-out loops, never
+    gathers, so no two profiles are ever active at once.
+    """
+    keys = [k for k in profile if hasattr(settings, k) and profile[k] not in (None, [], {})]
+    snapshot = {k: getattr(settings, k) for k in keys}
+    try:
+        for k in keys:
+            setattr(settings, k, profile[k])
+        yield
+    finally:
+        for k, v in snapshot.items():
+            setattr(settings, k, v)
+
+
 _profile_path = Path(__file__).resolve().parent.parent / "profile.json"
 if _profile_path.exists():
     try:

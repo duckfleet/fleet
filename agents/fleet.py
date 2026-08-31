@@ -25,7 +25,7 @@ from agents.worth_it import worth_it_verdict, errand_cost
 from guardrails.gates import (gate_tos, gate_spend, gate_preference, record,
                               clear_audit, audit_trail, GateDenied)
 from schemas.offer import ActionItem
-from config.settings import settings
+from config.settings import settings, profile_overrides
 from agents import history
 from agents.economics import RunCost, worth_running
 
@@ -123,9 +123,6 @@ async def _get_offers(replay: bool, cost=None) -> list[dict]:
             if key in seen:  # de-dupe the same offer surfaced by two feeds
                 continue
             seen.add(key)
-            coords = _store_for(o.get("merchant", ""))
-            if coords:
-                o["store_lat"], o["store_lng"] = coords
             scouted.append(o)
     return scouted
 
@@ -144,12 +141,19 @@ def _value(o: dict, cap: float) -> dict:
             "units": 1, "total_points": 0, "spend_aud": price}
 
 
-def _drive(o: dict, cost=None):
+def _drive(o: dict, coords=None, cost=None):
+    """Drive time to the store, or None (online / store unknown / no home to route from).
+    `coords` is the caller-resolved (lat, lng) — the live path passes _store_for() only
+    when the active profile has a known home; replay offers carry a frozen `drive` instead
+    so no live Routes call is ever needed off the fixture path."""
     if "drive" in o:
         return o["drive"]
-    if "store_lat" in o and "store_lng" in o:
+    lat, lng = o.get("store_lat"), o.get("store_lng")
+    if lat is None and coords is not None:
+        lat, lng = coords
+    if lat is not None and lng is not None:
         try:
-            t = errand_cost(o["store_lat"], o["store_lng"])
+            t = errand_cost(lat, lng)
             if cost is not None:
                 cost.add_routes()
             return {"minutes": t["minutes"], "km": t["km"]}
@@ -158,13 +162,20 @@ def _drive(o: dict, cost=None):
     return None
 
 
-async def run_fleet(replay: bool = True) -> dict:
-    """Run the whole fleet once. Returns {brief: [ActionItem], assessed, audit,
-    excluded_tos, n_candidates}."""
+async def _assess_and_brief(offers: list[dict], replay: bool, cost: RunCost,
+                            home_known: bool = True) -> dict:
+    """Value a scouted offer pool against the ACTIVE profile (global settings) and compose
+    the brief. Split out from scouting so the pool can be scouted once and re-valued per
+    user (run_fleet_for_profiles enters a profile_overrides() context around this call).
+
+    `home_known` gates the in-store errand costing: only when we actually know the active
+    user's home do we resolve a store + call Maps Routes. For onboarded users whose suburb
+    isn't geocoded yet it stays False, so we never route a stranger's errand from the
+    operator's home (and never spend Routes budget on them) — those offers are assessed on
+    value alone. Replay offers carry a frozen drive regardless.
+    """
     clear_audit()
-    cost = RunCost()
     cap = settings.spend_cap_aud_per_week
-    offers = await _get_offers(replay, cost)
 
     assessed: list[dict] = []
     excluded_tos = 0
@@ -193,7 +204,8 @@ async def run_fleet(replay: bool = True) -> dict:
         if pref_note:  # preference says skip — don't even cost the drive
             verdict, net, trip_cost, tmin, tkm = "skip", val["value_aud"], 0.0, 0.0, 0.0
         else:
-            drive = _drive(o, cost)
+            coords = _store_for(o.get("merchant", "")) if home_known else None
+            drive = _drive(o, coords, cost)
             if drive:
                 wv = worth_it_verdict(val["value_aud"], drive["minutes"], drive["km"])
                 verdict, net, trip_cost = wv["verdict"], wv["net_after_trip_aud"], wv["trip_cost_aud"]
@@ -252,3 +264,38 @@ async def run_fleet(replay: bool = True) -> dict:
             "history_rows": history_rows, "mode": "replay" if replay else "live",
             "call_candidates": call_candidates,
             "economics": {**econ, "breakdown": cost.breakdown()}}
+
+
+async def run_fleet(replay: bool = True) -> dict:
+    """Run the whole fleet once for the ACTIVE profile (env/profile.json/Firestore default).
+    Scout the offer pool, then value + brief it. Unchanged public contract — every existing
+    caller (nightly job, sample-brief page, dev scripts) keeps working."""
+    cost = RunCost()
+    offers = await _get_offers(replay, cost)
+    return await _assess_and_brief(offers, replay, cost, home_known=True)
+
+
+async def run_fleet_for_profiles(profiles: list[dict], replay: bool = False) -> dict:
+    """Multi-user nightly: scout the offer pool ONCE, then value + brief it per profile.
+
+    The expensive, user-independent stage (scouting the feeds) runs a single time; the cheap
+    deterministic stage (valuation against each user's programs / spend cap / preferences)
+    fans out. Each profile is valued inside a profile_overrides() context so the gates read
+    THAT user's settings, then restored. Sequential by design — settings is a process-wide
+    singleton, so profiles are never valued concurrently.
+
+    Returns {n_offers, scout_cost, runs:[{profile_id, notify_email, result}, ...]}. Emailing
+    is the caller's job (the runtime adapter), so this stays runtime-agnostic and testable.
+    """
+    scout_cost = RunCost()
+    offers = await _get_offers(replay, scout_cost)  # shared, read-only across users
+
+    runs: list[dict] = []
+    for profile in profiles:
+        # A user whose suburb isn't geocoded yet has no home to route errands from.
+        home_known = profile.get("home_lat") is not None and profile.get("home_lng") is not None
+        with profile_overrides(profile):
+            result = await _assess_and_brief(offers, replay, RunCost(), home_known=home_known)
+        runs.append({"profile_id": profile.get("profile_id"),
+                     "notify_email": profile.get("notify_email"), "result": result})
+    return {"n_offers": len(offers), "scout_cost": scout_cost.breakdown(), "runs": runs}
