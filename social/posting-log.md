@@ -48,13 +48,28 @@ points overnight and tells you what's actually worth doing. The arc being told i
   fight — see devlog).
 - Old cloud deploy vs new assistant-native distribution (the technical through-line).
 
+## Series + reach playbook (reuse for every post)
+- **Series format:** numbered "Learning part N". Open with "Learning part N:" plus a one-line hook
+  (a real quote works well), and link back to the previous part at the foot. Keep the voice human
+  and deliberately not-over-polished (the author edits Claude's drafts down toward his own cadence).
+- **Post 1:** https://www.linkedin.com/feed/update/urn:li:activity:7498643083623010304/
+- **Hashtags:** 4–5, mix broad + niche, no spammy stacks. Default builder set: #BuildInPublic
+  #AIAgents #ClaudeAI #MCP. #ClaudeAI + #MCP skew toward the Anthropic/Claude builder orbit. Author
+  prefers NO @-mentions.
+- **Links kill reach in the body.** Publish the post, then immediately add the link(s) as the FIRST
+  COMMENT on your own post (you can only comment once the post is live). Keep the body link-free.
+- **First 60–90 min is the reach lever:** reply fast to every comment; end each post on a genuine
+  question to prime that.
+- **Hook above the fold:** only the first ~2 lines show before "see more" — make them count.
+
 ---
 
 ## Archive
 
-### Post 1 — PUBLISHED (LinkedIn) · ~Aug 2026
-Status: live. Theme: premise + honest "too technical" + hackathon entry. (Link: TODO — paste
-the LinkedIn URL here when adding the next post, so future sessions can reference/quote it.)
+### Post 1 — PUBLISHED (LinkedIn) · ~Aug 2026 · "Learning part 1"
+Status: live. Theme: premise + honest "too technical" + hackathon entry.
+Link: https://www.linkedin.com/feed/update/urn:li:activity:7498643083623010304/
+(This is the start of a numbered "Learning part N" series — each post links back to the previous.)
 
 > Building AI agents right now feels a lot like building a website in the early 2000s. Everyone's
 > doing it, many of it is experimental, and somewhere in that pile is the stuff that quietly
@@ -77,50 +92,59 @@ the LinkedIn URL here when adding the next post, so future sessions can referenc
 > So which of your useful but time-costly errands would you actually hand to an agent, and which
 > would you never trust it with?
 
-### Post 2 — FINAL / ready to post · Aug 31 2026 (merges old Post 2 + Post 3)
-Audience: **builders**, not end users (no "go try it" CTA to normal people; stranger-install isn't
-real yet). Theme: the distribution shift AND proof it's real. Old world = two doors that don't
-convert (deploy-it-yourself, web form). New world = it's a connector I added to Claude from my
-phone. Technical takeaway: inverting where the LLM lives (assistant thinks on the user's billing;
-my code is just deterministic maths + guardrails). Honest limit kept: clean browse-and-tap install
-still needs directory approval; today it's "paste a URL." Optional images: use the two old-world
-screenshots (Cloud Shell deploy, web onboarding form) as the "before"; the stronger shot is the
-connector working inside Claude. Paste the final URL above once live.
+### Post 2 — FINAL · scheduled 7:30am Tue Sep 1 2026 (LinkedIn) · "Learning part 2"
+Author's final version, in his own voice (kept deliberately human / not over-polished). Part of the
+numbered "Learning part N" series; opens with the "Learning part 2:" label + the quote as the hook,
+and links back to Part 1 at the foot. Author dropped the standalone technical paragraph to keep it
+tight and human. Hook: the least technical person (a middle-aged mother) reached for ChatGPT, not a
+download. Lesson: you now build two front doors (connector AND web), and even the connector must be
+added from the web before it shows on your phone.
+Images (thumbnail = first): 1) phone screenshot of Claude running "Set up my duck fleet preference";
+2) the landing page showing BOTH doors ("Add to Claude" + "Open the web app").
+Hashtags used: #BuildInPublic #AIAgents #ClaudeAI #MCP — chosen to reach the Anthropic/Claude
+builder orbit (#ClaudeAI + #MCP are the closest hashtags get to Anthropic devrel + MCP
+contributors). No @-mention, by author's choice.
+Reach playbook for this post (see the shared playbook at the bottom of this file):
+- Move BOTH links out of the body into the FIRST COMMENT right after posting (in-body links get a
+  reach penalty on LinkedIn). Ready-to-paste comment text is under the post body below.
+- Win the first hour: reply fast to every comment; lean on the closing question.
+- Keep the "Learning part 2:" quote as the first line so the hook sits above the "see more" fold.
+Paste this post's own URL below once live.
 
-> A month into building 🦆 DuckFleet in public, and this week I stopped theorising about
-> distribution and actually shipped it.
+> Learning part 2: "I already have ChatGPT, can't I just ask it to do this?"
 >
-> Quick recap: DuckFleet is a fleet of agents that hunts loyalty-points deals overnight and tells me
-> what's actually worth doing. The hard part was never the agents. It was this: once someone wants
-> it, how do they get it? I had two doors and both were wrong.
+> I showed someone the DuckFleet agents over the weekend, and how the "agents" keep track of loyalty
+> points for you. Her response was to get ChatGPT to do it. I found that really interesting, because
+> she is a middle aged mother who is not technical at all. The instinct now is not "where do I
+> download this," (or app) it is "can my AI assistant just do it."
 >
-> Door one: deploy it yourself. I even have a one-click "open in Cloud Shell" that spins it up on
-> your own Google Cloud. Fine for a developer. A wall for everyone else, and honestly for plenty of
-> developers too.
+> The onboarding experience is changing fast. But here is what I found: it is not actually
+> straightforward to hand agents to someone like her. If you build something new, you can ship it as a
+> custom connector, but she can only add it on the paid version of Claude, or as the single custom
+> connector you get on the ChatGPT free plan.
 >
-> Door two: a web page where you sign in and chat a profile. It captures interest and then, nothing.
-> There is no next step that actually runs the thing for you.
+> So these days, building an agent means building at least two front doors. One is the connector. One
+> is a plain web version. And even the connector has a catch: you have to add it from the web first
+> before it shows up on your phone. Once I did that, I opened Claude on my phone, said "add Velocity
+> to my programs," and watched it save. No deploy, no terminal, no cloud project. It runs inside the
+> assistant I already use. I just had to go through the web once to get it there.
 >
-> The tester who broke it for me was blunt: "I already have ChatGPT, can't I just ask it to do this?"
+> None of this is a clean "tap to install" yet, and building two front doors for one agent is more
+> work, not less. If you are building agents right now, are you shipping a connector, a web app, or
+> both? And has anyone cracked getting a non-technical person onto a connector without the web-first
+> detour?
 >
-> So this week I built exactly that. DuckFleet is now a connector. I added it to Claude from my
-> phone, told it "add Velocity to my programs," and watched it save. No deploy, no terminal, no cloud
-> project. It runs inside the assistant I already use.
+> Give it a go: https://app.duckfleet.dev/ and let me know if it worked or it was utterly confusing.
 >
-> Here is the technical bit, because I think it is the real shift. The old way, my server owns the
-> model, so every overnight hunt burns my inference. That is the line item that scales with users;
-> the servers are rounding error next to it. As a connector the flip is inverted: your assistant does
-> the thinking on your billing, and my code is just the deterministic part, the maths and the
-> guardrails. That is what makes it roughly $0 for me to run for a stranger, and provider-agnostic by
-> default.
+> Learning part 1: https://www.linkedin.com/feed/update/urn:li:activity:7498643083623010304/
 >
-> Honest limit, because that is the whole point of building in public: it is not a clean "browse and
-> tap install" yet. That needs directory approval. Today it is still "paste a URL," which is a
-> paid-plan, desktop-settings thing, not a normal-person action. The inversion works. The front door
-> doesn't, yet.
->
-> So for the builders: are you still deploying your agents, or shipping them as connectors people add
-> to Claude or ChatGPT? And if you've done it, did the "no deploy" promise actually hold?
+> #BuildInPublic #AIAgents #ClaudeAI #MCP
+
+**First comment (paste right after posting, for reach).** For max reach, delete the two link lines
+from the body above and put them here instead:
+
+> Give it a go: https://app.duckfleet.dev/ — let me know if it worked or was utterly confusing.
+> Learning part 1: https://www.linkedin.com/feed/update/urn:li:activity:7498643083623010304/
 
 ---
 
@@ -129,7 +153,13 @@ Not written yet. Each brief has the hook, the story beat, the technical takeaway
 to keep, and a candidate closing question. Draft in the voice above (first person, honest, no
 em-dashes, one 🦆, real open question). Post 2 makes the promise; these two deliver on it.
 
-### Post 3 — MERGED into Post 2 (Aug 31) · "The connector is real"
+### Post 3 — DRAFT-LATER · "Learning part 3" (continues the numbered series)
+The series is now "Learning part N" — each post opens with that label + a one-line hook and links
+back to the previous part at the foot. Part 3 is the next in the sequence (candidate theme below,
+formerly the "reactive -> guided" idea, or the deliverability story). Keep the human, not-polished
+voice the author settled on for Part 2.
+
+### (reference) old Post 3 brief — MERGED into Post 2 (Sep 1) · "The connector is real"
 NOTE: no longer a standalone post. Its core (shipped it, added it to Claude from a phone, the
 LLM-inversion, the honest install limit) is now the second half of the finalized Post 2 above. Kept
 here for the detail beats in case a future follow-up wants them.
