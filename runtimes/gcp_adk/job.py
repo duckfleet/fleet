@@ -80,7 +80,11 @@ async def _run_for_profiles(profiles: list, subject: str, replay: bool) -> None:
                      default=str))
     provider = active_email_provider()
     for run in multi["runs"]:
-        pid, to, result = run["profile_id"], run["notify_email"], run["result"]
+        pid, result = run["profile_id"], run["result"]
+        # Prefer the profile's own notify_email; fall back to the doc id when it's the
+        # user's verified email (the hosted onboarding keys every profile on it), so a
+        # profile saved without an explicit notify_email is still reachable.
+        to = run["notify_email"] or (pid if pid and "@" in pid else None)
         if not to:
             print(json.dumps({"event": "brief_skipped_no_email", "profile_id": pid}))
             continue

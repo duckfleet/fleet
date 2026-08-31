@@ -63,6 +63,19 @@ def active_email_provider() -> str | None:
 _DIV = "═" * 32   # heavy divider
 _SUB = "─" * 32   # light divider
 
+# Internal source id -> human label for the provenance line.
+_SOURCE_LABELS = {"ozbargain": "OzBargain", "pointhacks": "Point Hacks",
+                  "freepoints": "freepoints", "everyday_rewards": "Everyday Rewards",
+                  "flybuys": "Flybuys", "manual": "fixtures"}
+
+
+def _live_sources(result: dict) -> str:
+    """Honest provenance: name the feeds that actually contributed offers THIS run, in a
+    stable order. Falls back to the full scout list if sources aren't tagged (older runs)."""
+    present = {a.get("source") for a in result.get("assessed", []) if a.get("source")}
+    ordered = [lbl for key, lbl in _SOURCE_LABELS.items() if key in present]
+    return " · ".join(ordered) if ordered else "OzBargain · Point Hacks · freepoints"
+
 
 def _verdict_label(v: str) -> str:
     return {"do_it": "DO IT", "needs_approval": "NEEDS YOUR OK", "skip": "SKIP"}.get(v, v.upper())
@@ -81,7 +94,7 @@ def render_text(result: dict) -> str:
 
     L: list[str] = [f"DuckFleet Daily Hunt · {date.today():%-d %b %Y}"]
     L.append("SIMULATION MODE: replay fixtures (not live deals)"
-             if mode == "replay" else "LIVE run: OzBargain feed")
+             if mode == "replay" else f"LIVE run: {_live_sources(result)}")
     L.append(f"Reviewed {result.get('n_candidates', len(items))}  ·  "
              f"{n_do} to do  ·  {n_skip} skipped  ·  {excluded} excluded (ToS)")
     L.append("")
@@ -133,7 +146,7 @@ def render_text(result: dict) -> str:
 
     hist = result.get("history_rows", 0)
     L += [_SUB, "What's real vs simulated (build period):",
-          f"  • Deals: {'replay fixtures (canned)' if mode == 'replay' else 'live OzBargain feed (real)'}",
+          f"  • Deals: {'replay fixtures (canned)' if mode == 'replay' else f'live feeds — {_live_sources(result)} (real)'}",
           "  • Points maths & spend cap: real (deterministic Python)",
           f"  • Drive time/fuel: {'frozen fixture values' if mode == 'replay' else 'estimated from a local store directory'}",
           "  • Phone stock-check: gated; a real call on your approval (Twilio), else labelled-simulated",
@@ -236,7 +249,8 @@ def render_html(result: dict) -> str:
     econ = result.get("economics")
     n_reviewed = result.get("n_candidates") or len(items)
     n_do, n_skip = len(do_items), len(skips)
-    banner = "SIMULATION · replay fixtures" if mode == "replay" else "LIVE · OzBargain feed"
+    banner = ("SIMULATION · replay fixtures" if mode == "replay"
+              else f"LIVE · {_live_sources(result)}")
 
     INK, SOFT, RULE, PAPER, MARK = "#181812", "#6a675e", "#e6e1d5", "#faf7f0", "#ffe08a"
     FONT = ("'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,"
