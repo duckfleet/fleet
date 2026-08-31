@@ -98,6 +98,27 @@ def get_offers(tag: str = "", limit: int = 20) -> list[dict]:
 
 
 @mcp.tool
+def get_pointhacks_offers(limit: int = 20) -> list[dict]:
+    """Fetch current points/miles offers from the Point Hacks feed (read-only, no login).
+    Point Hacks covers the earning side — card sign-up bonuses, transfer bonuses, program
+    promos — that retail deal feeds miss. Returns raw items (title, url, categories, summary,
+    program hint) for you to reason over. Numbers stated in the text are the source's, not
+    computed; check anything actionable with `worth_it`."""
+    from agents.pointhacks_feed import fetch_offers
+    return fetch_offers(limit=max(1, min(limit, 50)))
+
+
+@mcp.tool
+def get_freepoints_offers(limit: int = 20) -> list[dict]:
+    """Fetch current loyalty-points deals from the freepoints feed (read-only, no login).
+    freepoints aggregates AU Flybuys / Everyday Rewards / Qantas / Velocity offers at Coles,
+    Woolworths, BigW and partners. Returns raw items (title, url, categories, summary, program
+    hint) for you to reason over — decide which are worth chasing, then check with `worth_it`."""
+    from agents.freepoints_feed import fetch_offers
+    return fetch_offers(limit=max(1, min(limit, 50)))
+
+
+@mcp.tool
 def worth_it(net_value_aud: float, drive_minutes: float, drive_km: float) -> dict:
     """Is an in-store errand worth the trip? Deterministic verdict weighing the net dollar
     value against the time + fuel of driving `drive_minutes` / `drive_km`. Call it before

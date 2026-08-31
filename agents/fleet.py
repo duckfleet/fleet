@@ -9,6 +9,7 @@ A runtime (Cloud Run job, etc.) just calls run_fleet(); it holds no platform cod
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
@@ -17,7 +18,7 @@ from pathlib import Path
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 
-from agents.scouts import scout_ozbargain
+from agents.scouts import scout_ozbargain, scout_pointhacks, scout_freepoints
 from agents.presenter import presenter
 from agents.valuer import compute_stack_value
 from agents.worth_it import worth_it_verdict, errand_cost
@@ -96,12 +97,36 @@ async def _get_offers(replay: bool, cost=None) -> list[dict]:
         if not path.is_absolute():
             path = _FIX / path
         return json.loads(path.read_text())["offers"]
-    scouted = _json_array(await _run_agent(
-        scout_ozbargain, "fleet-scout", "Scout OzBargain for loyalty-points offers now.", cost))
-    for o in scouted:
-        coords = _store_for(o.get("merchant", ""))
-        if coords:
-            o["store_lat"], o["store_lng"] = coords
+
+    # Live path: run every scout in parallel and merge. Each returns a JSON array of
+    # Offer-shaped dicts; a scout that errors or emits junk is skipped, never fatal.
+    scouts = [
+        (scout_ozbargain, "Scout OzBargain for loyalty-points offers now."),
+        (scout_pointhacks, "Scout Point Hacks for loyalty-points offers now."),
+        (scout_freepoints, "Scout freepoints for loyalty-points offers now."),
+    ]
+    results = await asyncio.gather(
+        *(_run_agent(agent, "fleet-scout", prompt, cost) for agent, prompt in scouts),
+        return_exceptions=True,
+    )
+    scouted: list[dict] = []
+    seen: set[str] = set()
+    for raw in results:
+        if isinstance(raw, Exception):
+            continue
+        try:
+            offers = _json_array(raw)
+        except (ValueError, json.JSONDecodeError):
+            continue
+        for o in offers:
+            key = o.get("source_url") or f"{o.get('source')}:{o.get('id')}"
+            if key in seen:  # de-dupe the same offer surfaced by two feeds
+                continue
+            seen.add(key)
+            coords = _store_for(o.get("merchant", ""))
+            if coords:
+                o["store_lat"], o["store_lng"] = coords
+            scouted.append(o)
     return scouted
 
 

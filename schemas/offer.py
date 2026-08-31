@@ -6,7 +6,7 @@ from typing import Literal
 
 class Offer(BaseModel):
     id: str
-    source: Literal["pointhacks", "ozbargain", "everyday_rewards", "flybuys", "manual"]
+    source: Literal["pointhacks", "freepoints", "ozbargain", "everyday_rewards", "flybuys", "manual"]
     source_url: str
     merchant: str
     # "none" = a strong stackable deal that earns no specific scheme on its own
