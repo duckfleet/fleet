@@ -62,6 +62,23 @@ points overnight and tells you what's actually worth doing. The arc being told i
   question to prime that.
 - **Hook above the fold:** only the first ~2 lines show before "see more" — make them count.
 
+## What actually moved reach (post-mortem learnings, update as evidence comes in)
+Evidence so far: Post 2 got ~1 like in a day. Honest hierarchy of levers, most → least important:
+1. **Audience size + first-hour engagement.** LinkedIn shows a post to a slice of your network; if
+   few engage fast, it stops. Small/new audience = small reach, regardless of quality. Grow the
+   audience: post consistently (1–2x/wk), and spend ~15 min/day commenting substantively on bigger
+   accounts in the niche (AI agents, MCP, Claude devs) — that borrows their audience.
+2. **Comments >> likes.** A comment is worth many likes to the algorithm. End on one crisp question
+   (Post 2 did). Optionally DM a few relevant people at post time to prime early comments.
+3. **Format.** Native carousels (PDF "documents") and short screen-recordings tend to out-distribute
+   image posts. The two-image collage in Post 2 was tiny/hard to read on mobile — prefer one clear
+   image or a 10–15s screen-capture of the "watched it save" phone moment.
+4. **Channel fit (probably the biggest miss).** This is builder content. It will likely travel much
+   further on X (build-in-public + AI-agent community), Reddit (r/ClaudeAI, r/LocalLLaMA), Hacker
+   News (Show HN), and MCP/Anthropic Discords than on cold LinkedIn. Repurpose each "Learning part"
+   for one of these too.
+5. **Hashtags + timing: minor.** Don't over-optimize these. Keep #BuildInPublic; Tue–Thu AM is fine.
+
 ---
 
 ## Archive
@@ -92,7 +109,17 @@ Link: https://www.linkedin.com/feed/update/urn:li:activity:7498643083623010304/
 > So which of your useful but time-costly errands would you actually hand to an agent, and which
 > would you never trust it with?
 
-### Post 2 — FINAL · scheduled 7:30am Tue Sep 1 2026 (LinkedIn) · "Learning part 2"
+### Post 2 — PUBLISHED · ~7:30am Tue Sep 1 2026 (LinkedIn) · "Learning part 2"
+Outcome after ~1 day: 1 like, 1 comment. Low distribution (expected for an early post / small
+audience — not a content-quality signal). Actual hashtags used differed from plan: author dropped
+#BuildInPublic and added #Australia -> shipped as #AIAgents #ClaudeAI #MCP #Australia. Links were
+kept out of the body (good). URL: TODO paste once handy.
+Learnings for Post 3 (see "What actually moved reach" note at bottom of file):
+- Keep #BuildInPublic next time (real engaged community); #Australia is a low-signal geo tag.
+- LinkedIn reach here is capped by network size + first-hour engagement, NOT hashtags/timing.
+- Highest-leverage untried move: cross-post this builder content to where that audience actually
+  lives (X/#buildinpublic, r/ClaudeAI + r/LocalLLaMA, Hacker News Show HN, MCP/Anthropic Discords).
+  Cold LinkedIn may simply be the wrong primary channel for this material.
 Author's final version, in his own voice (kept deliberately human / not over-polished). Part of the
 numbered "Learning part N" series; opens with the "Learning part 2:" label + the quote as the hook,
 and links back to Part 1 at the foot. Author dropped the standalone technical paragraph to keep it

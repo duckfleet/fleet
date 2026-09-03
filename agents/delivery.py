@@ -132,6 +132,26 @@ def render_text(result: dict) -> str:
             L.append(f"  • {c['merchant']}: {c['item']} (gated call: it self-identifies as AI)")
         L.append("")
 
+    ideas = result.get("ideas") or []
+    if ideas:
+        L += ["", "IDEAS FOR YOU (from Point Hacks, applied to your programs):"]
+        for i in ideas:
+            L.append(f"  • {i.get('headline', '').strip()}")
+            if i.get("idea"):
+                L.append(f"    {i['idea'].strip()}")
+            if i.get("source_url"):
+                L.append(f"    Read: {i['source_url']}")
+        L.append("")
+
+    reading = result.get("reading") or []
+    if reading:
+        L.append("WORTH A READ:")
+        for r in reading:
+            L.append(f"  • {r.get('title', '').strip()} — {r.get('why', '').strip()}")
+            if r.get("source_url"):
+                L.append(f"    {r['source_url']}")
+        L.append("")
+
     econ = result.get("economics")
     if econ:
         c, v, roi = econ.get("cost_aud", 0), econ.get("value_aud", 0), econ.get("roi")
@@ -202,13 +222,21 @@ def _big_value_text(item, by_ref: dict) -> str:
     return f"Worth ${item.net_value_aud:,.2f}"
 
 
+def _cta_label(rec: dict) -> str:
+    """Source-aware call to action: send the reader to the site the offer actually lives on,
+    rather than a generic 'Activate' (these are third-party offers, not something we action)."""
+    site = _SOURCE_LABELS.get((rec or {}).get("source", ""))
+    return f"Go to {site}" if site and site != "fixtures" else "View offer"
+
+
 def _links_html(item, by_ref: dict) -> str:
     """Editorial underlined text links (not buttons), to match the brief's typographic look."""
-    url = (by_ref.get(item.audit_ref) or {}).get("source_url")
+    rec = by_ref.get(item.audit_ref) or {}
+    url = rec.get("source_url")
     base = "text-decoration:none;font-weight:600;font-size:15px;padding-bottom:1px;border-bottom:2px solid"
     out = []
     if url:
-        out.append(f'<a href="{_esc(url)}" style="{base} #2b6cff55;color:#2b6cff">Activate</a>')
+        out.append(f'<a href="{_esc(url)}" style="{base} #2b6cff55;color:#2b6cff">{_esc(_cta_label(rec))}</a>')
     ml = "margin-left:24px" if out else ""
     out.append(f'<a href="{_esc(_calendar_url(item.headline))}" style="{base} #e6e1d5;color:#6a675e;{ml}">'
                f'Add a reminder</a>')
@@ -216,10 +244,11 @@ def _links_html(item, by_ref: dict) -> str:
 
 
 def _links_text(item, by_ref: dict) -> list[str]:
-    url = (by_ref.get(item.audit_ref) or {}).get("source_url")
+    rec = by_ref.get(item.audit_ref) or {}
+    url = rec.get("source_url")
     lines = []
     if url:
-        lines.append(f"   Activate/view: {url}")
+        lines.append(f"   {_cta_label(rec)}: {url}")
     lines.append(f"   Add reminder: {_calendar_url(item.headline)}")
     return lines
 
@@ -249,6 +278,8 @@ def render_html(result: dict) -> str:
     econ = result.get("economics")
     n_reviewed = result.get("n_candidates") or len(items)
     n_do, n_skip = len(do_items), len(skips)
+    ideas = result.get("ideas") or []
+    reading = result.get("reading") or []
     banner = ("SIMULATION · replay fixtures" if mode == "replay"
               else f"LIVE · {_live_sources(result)}")
 
@@ -317,6 +348,28 @@ def render_html(result: dict) -> str:
                  f'letter-spacing:-.3px">Reply <span style="background:{INK};color:{PAPER};padding:1px 9px;'
                  f'border-radius:6px;font-weight:700">APPROVE</span> and I\'ll call {names} to check '
                  f'stock. I\'ll tell them I\'m an AI.</div>')
+
+    if ideas:
+        P.append(rule + kicker("Ideas for you"))
+        for i in ideas:
+            url = i.get("source_url")
+            link = (f'<a href="{_esc(url)}" style="color:{INK};font-weight:600;'
+                    f'border-bottom:2px solid #2b6cff55">Read on Point Hacks</a>') if url else ""
+            P.append(f'<div style="margin-top:22px"><div style="font-size:18px;font-weight:700">'
+                     f'{_esc(i.get("headline", ""))}</div>'
+                     f'<div style="margin-top:5px;font-size:15px;line-height:1.5;color:{SOFT};'
+                     f'font-weight:500">{_esc(i.get("idea", ""))}</div>'
+                     f'<div style="margin-top:8px;font-size:14px">{link}</div></div>')
+
+    if reading:
+        P.append(rule + kicker("Worth a read"))
+        for r in reading:
+            url = r.get("source_url")
+            title = _esc(r.get("title", ""))
+            t = (f'<a href="{_esc(url)}" style="color:{INK};font-weight:600;text-decoration:none;'
+                 f'border-bottom:1px solid {RULE}">{title}</a>') if url else title
+            P.append(f'<div style="margin-top:14px;font-size:15px;line-height:1.5">{t}'
+                     f'<span style="color:{SOFT}"> — {_esc(r.get("why", ""))}</span></div>')
 
     # footer (table for left/right)
     cost = ""

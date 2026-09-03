@@ -26,7 +26,7 @@ from guardrails.gates import (gate_tos, gate_spend, gate_preference, record,
                               clear_audit, audit_trail, GateDenied)
 from schemas.offer import ActionItem
 from config.settings import settings, profile_overrides
-from agents import history
+from agents import history, seen_store, insights, pointhacks_feed
 from agents.economics import RunCost, worth_running
 
 _FIX = Path(__file__).resolve().parent.parent / "fixtures"
@@ -162,8 +162,47 @@ def _drive(o: dict, coords=None, cost=None):
     return None
 
 
+def _signature(a: dict) -> str:
+    """Stable content signature for repeat-detection: the SAME recurring promo (e.g. a daily
+    Coles gift-card 20x deal) keeps this fixed even as its title/date/id rotate. Deliberately
+    coarse — source + program + merchant + category — so 'the same thing every day' collapses
+    to one key."""
+    return "|".join([str(a.get("source") or ""), str(a.get("program") or ""),
+                     (a.get("merchant") or "").strip().lower(), str(a.get("category") or "")])
+
+
+def _apply_demotions(assessed: list[dict], counts: dict[str, int], threshold: int = 2) -> int:
+    """Demote (not hide) offers we've already surfaced `threshold`+ times in the window: they
+    drop out of the worth-doing picks into the visible skip list, with an honest reason. Value
+    that materially changes still shows next time (the count ages out of the window)."""
+    n = 0
+    for a in assessed:
+        if a["verdict"] in ("do_it", "needs_approval"):
+            c = counts.get(_signature(a), 0)
+            if c >= threshold:
+                a["verdict"] = "skip"
+                a["recurring"] = True
+                a["reason_note"] = f"recurring offer, already flagged {c}x in the last 7 days"
+                n += 1
+    return n
+
+
+def _prefetch_insight_ctx(replay: bool):
+    """Fetch the Point Hacks feed + a few allowed article bodies ONCE per run (shared across
+    users), for the insights beat. Deterministic + best-effort; ([], {}) in replay or on error."""
+    if replay:
+        return [], {}
+    try:
+        items = pointhacks_feed.fetch_offers(limit=15)
+        return items, insights.prefetch_texts(items)
+    except Exception:  # noqa: BLE001
+        return [], {}
+
+
 async def _assess_and_brief(offers: list[dict], replay: bool, cost: RunCost,
-                            home_known: bool = True) -> dict:
+                            home_known: bool = True, seen_key: str | None = None,
+                            feed_items: list[dict] | None = None,
+                            article_texts: dict[str, str] | None = None) -> dict:
     """Value a scouted offer pool against the ACTIVE profile (global settings) and compose
     the brief. Split out from scouting so the pool can be scouted once and re-valued per
     user (run_fleet_for_profiles enters a profile_overrides() context around this call).
@@ -236,6 +275,14 @@ async def _assess_and_brief(offers: list[dict], replay: bool, cost: RunCost,
             "audit_ref": ref,
         })
 
+    # Demote offers we've already sent this user 2+ times in the last week (per-user ledger,
+    # best-effort). Then record today's still-worth-doing picks for tomorrow's run.
+    if seen_key and not replay:
+        _apply_demotions(assessed, seen_store.recent_counts(seen_key))
+        seen_store.record_surfaced(
+            seen_key, [_signature(a) for a in assessed
+                       if a["verdict"] in ("do_it", "needs_approval")])
+
     # Offers worth doing whose stock is unconfirmed + reachable -> a gated call the human
     # can approve. This is the caller beat surfaced in the brief.
     call_candidates = [
@@ -244,6 +291,14 @@ async def _assess_and_brief(offers: list[dict], replay: bool, cost: RunCost,
         if a["verdict"] in ("do_it", "needs_approval")
         and a.get("stock_state") in ("unknown", "low") and a.get("store_phone")
     ]
+
+    # Insights beat: Point Hacks methods applied to THIS user's programs + today's worth-doing
+    # offers (personalised ideas + a "worth a read" footer). Skipped in replay; best-effort.
+    ins = {"reading": [], "ideas": []}
+    if not replay and feed_items:
+        worth_doing = [a for a in assessed if a["verdict"] in ("do_it", "needs_approval")]
+        ins = await insights.build(feed_items, settings.programs, worth_doing,
+                                   article_texts or {}, cost)
 
     # append this run's offers to BigQuery history (best-effort; never blocks the brief)
     history_rows = history.record_run(assessed, "replay" if replay else "live")
@@ -263,6 +318,7 @@ async def _assess_and_brief(offers: list[dict], replay: bool, cost: RunCost,
             "excluded_tos": excluded_tos, "n_candidates": len(offers),
             "history_rows": history_rows, "mode": "replay" if replay else "live",
             "call_candidates": call_candidates,
+            "reading": ins["reading"], "ideas": ins["ideas"],
             "economics": {**econ, "breakdown": cost.breakdown()}}
 
 
@@ -272,7 +328,38 @@ async def run_fleet(replay: bool = True) -> dict:
     caller (nightly job, sample-brief page, dev scripts) keeps working."""
     cost = RunCost()
     offers = await _get_offers(replay, cost)
-    return await _assess_and_brief(offers, replay, cost, home_known=True)
+    feed_items, texts = _prefetch_insight_ctx(replay)
+    seen_key = settings.profile_id or None
+    return await _assess_and_brief(offers, replay, cost, home_known=True, seen_key=seen_key,
+                                   feed_items=feed_items, article_texts=texts)
+
+
+def _recipient(profile: dict) -> str | None:
+    """The email a profile's brief goes to: its notify_email, else the doc id when that id is
+    the user's verified email (hosted onboarding keys every profile on it)."""
+    pid = profile.get("profile_id")
+    return profile.get("notify_email") or (pid if pid and "@" in pid else None)
+
+
+def _dedupe_by_recipient(profiles: list[dict]) -> list[dict]:
+    """One brief per inbox. When several profiles resolve to the same recipient (e.g. the seed
+    `default` doc alongside a user's own email-keyed profile), keep the most specific: a real
+    onboarded profile (email id, own notify_email) wins over the `default` seed. Profiles with
+    no resolvable recipient are kept as-is (the runtime logs them as unsendable)."""
+    def score(p: dict) -> int:
+        pid = p.get("profile_id") or ""
+        return (2 if p.get("notify_email") else 0) + (1 if pid != "default" and "@" in pid else 0)
+
+    best: dict[str, dict] = {}
+    passthrough: list[dict] = []
+    for p in profiles:
+        to = _recipient(p)
+        if not to:
+            passthrough.append(p)
+            continue
+        if to not in best or score(p) > score(best[to]):
+            best[to] = p
+    return list(best.values()) + passthrough
 
 
 async def run_fleet_for_profiles(profiles: list[dict], replay: bool = False) -> dict:
@@ -289,13 +376,19 @@ async def run_fleet_for_profiles(profiles: list[dict], replay: bool = False) -> 
     """
     scout_cost = RunCost()
     offers = await _get_offers(replay, scout_cost)  # shared, read-only across users
+    feed_items, texts = _prefetch_insight_ctx(replay)  # shared insight context across users
 
+    deduped = _dedupe_by_recipient(profiles)
     runs: list[dict] = []
-    for profile in profiles:
+    for profile in deduped:
         # A user whose suburb isn't geocoded yet has no home to route errands from.
         home_known = profile.get("home_lat") is not None and profile.get("home_lng") is not None
         with profile_overrides(profile):
-            result = await _assess_and_brief(offers, replay, RunCost(), home_known=home_known)
+            result = await _assess_and_brief(offers, replay, RunCost(), home_known=home_known,
+                                             seen_key=profile.get("profile_id"),
+                                             feed_items=feed_items, article_texts=texts)
         runs.append({"profile_id": profile.get("profile_id"),
+                     "recipient": _recipient(profile),
                      "notify_email": profile.get("notify_email"), "result": result})
-    return {"n_offers": len(offers), "scout_cost": scout_cost.breakdown(), "runs": runs}
+    return {"n_offers": len(offers), "n_profiles_in": len(profiles),
+            "n_recipients": len(runs), "scout_cost": scout_cost.breakdown(), "runs": runs}
